@@ -18,35 +18,42 @@ export default function DashboardPage() {
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Leaf className="h-10 w-10 animate-pulse text-primary" />
-          <p className="text-muted-foreground">Loading sensor data...</p>
+          <p className="text-sm text-muted-foreground">
+            Loading sensor data...
+          </p>
         </div>
       </div>
     )
   }
 
-  const latestReading = readings.length > 0 ? readings[readings.length - 1] : null
+  const latestReading =
+    readings.length > 0 ? readings[readings.length - 1] : null
 
   return (
     <div className="mx-auto max-w-7xl">
-      <div className="mb-8 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+      {/* Header */}
+      <div className="mb-6 flex flex-col gap-2 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-serif text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+          <h1 className="font-serif text-xl font-bold tracking-tight text-foreground sm:text-2xl md:text-3xl">
             Farm Dashboard
           </h1>
-          <p className="mt-1 text-muted-foreground">
+          <p className="mt-1 text-sm text-muted-foreground">
             {user
               ? `Welcome back, ${user.displayName || "Farmer"}`
               : "Viewing demo data"}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {isDemo && (
             <Badge variant="secondary" className="text-xs">
               Demo Mode
             </Badge>
           )}
           {latestReading && (
-            <Badge variant="outline" className="text-xs text-muted-foreground">
+            <Badge
+              variant="outline"
+              className="text-xs text-muted-foreground"
+            >
               Last updated:{" "}
               {new Date(latestReading.timestamp).toLocaleTimeString()}
             </Badge>
@@ -57,7 +64,7 @@ export default function DashboardPage() {
       {/* Sensor overview cards */}
       <SensorCards latestReading={latestReading} />
 
-      {/* Charts and alerts grid */}
+      {/* Charts + alerts grid */}
       <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-3">
         <div className="xl:col-span-2">
           <SensorChart readings={readings} />
@@ -68,7 +75,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Recommendations */}
-      <div className="mt-6">
+      <div className="mt-6 pb-6">
         <RecommendationsPanel latestReading={latestReading} />
       </div>
     </div>

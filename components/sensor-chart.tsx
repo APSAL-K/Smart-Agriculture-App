@@ -10,7 +10,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import type { SensorReading } from "@/lib/types"
 
@@ -20,10 +26,34 @@ interface SensorChartProps {
 
 type MetricKey = "soilMoisture" | "temperature" | "humidity"
 
-const metrics: { key: MetricKey; label: string; color: string; unit: string }[] = [
-  { key: "soilMoisture", label: "Soil Moisture", color: "var(--color-chart-1)", unit: "%" },
-  { key: "temperature", label: "Temperature", color: "var(--color-chart-5)", unit: "\u00B0C" },
-  { key: "humidity", label: "Humidity", color: "var(--color-chart-4)", unit: "%" },
+const metrics: {
+  key: MetricKey
+  label: string
+  shortLabel: string
+  color: string
+  unit: string
+}[] = [
+  {
+    key: "soilMoisture",
+    label: "Soil Moisture",
+    shortLabel: "Moisture",
+    color: "var(--color-chart-1)",
+    unit: "%",
+  },
+  {
+    key: "temperature",
+    label: "Temperature",
+    shortLabel: "Temp",
+    color: "var(--color-chart-5)",
+    unit: "\u00B0C",
+  },
+  {
+    key: "humidity",
+    label: "Humidity",
+    shortLabel: "Humidity",
+    color: "var(--color-chart-4)",
+    unit: "%",
+  },
 ]
 
 export function SensorChart({ readings }: SensorChartProps) {
@@ -43,11 +73,15 @@ export function SensorChart({ readings }: SensorChartProps) {
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <CardHeader className="p-4 sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle className="font-serif text-lg">Sensor Trends</CardTitle>
-            <CardDescription>Last 24 hours of readings</CardDescription>
+            <CardTitle className="font-serif text-base sm:text-lg">
+              Sensor Trends
+            </CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
+              Last 24 hours of readings
+            </CardDescription>
           </div>
           <div className="flex gap-1 rounded-lg bg-muted p-1">
             {metrics.map((metric) => (
@@ -55,23 +89,32 @@ export function SensorChart({ readings }: SensorChartProps) {
                 key={metric.key}
                 variant={activeMetric === metric.key ? "default" : "ghost"}
                 size="sm"
-                className="text-xs"
+                className="px-2 text-xs sm:px-3"
                 onClick={() => setActiveMetric(metric.key)}
               >
-                {metric.label}
+                <span className="sm:hidden">{metric.shortLabel}</span>
+                <span className="hidden sm:inline">{metric.label}</span>
               </Button>
             ))}
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="h-[300px] w-full">
+      <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+        <div className="h-[220px] w-full sm:h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="colorFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={active.color} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={active.color} stopOpacity={0} />
+                  <stop
+                    offset="5%"
+                    stopColor={active.color}
+                    stopOpacity={0.3}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor={active.color}
+                    stopOpacity={0}
+                  />
                 </linearGradient>
               </defs>
               <CartesianGrid
@@ -81,15 +124,22 @@ export function SensorChart({ readings }: SensorChartProps) {
               />
               <XAxis
                 dataKey="time"
-                tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+                tick={{
+                  fontSize: 10,
+                  fill: "var(--color-muted-foreground)",
+                }}
                 tickLine={false}
                 axisLine={false}
+                interval="preserveStartEnd"
               />
               <YAxis
-                tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
+                tick={{
+                  fontSize: 10,
+                  fill: "var(--color-muted-foreground)",
+                }}
                 tickLine={false}
                 axisLine={false}
-                width={40}
+                width={32}
               />
               <Tooltip
                 contentStyle={{

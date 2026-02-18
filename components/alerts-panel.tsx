@@ -1,6 +1,12 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { AlertTriangle, AlertCircle, CheckCircle2, Bell } from "lucide-react"
@@ -14,14 +20,16 @@ interface AlertsPanelProps {
 export function AlertsPanel({ alerts }: AlertsPanelProps) {
   return (
     <Card className="h-full">
-      <CardHeader>
+      <CardHeader className="p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2 font-serif text-lg">
+            <CardTitle className="flex items-center gap-2 font-serif text-base sm:text-lg">
               <Bell className="h-4 w-4" />
               Alerts
             </CardTitle>
-            <CardDescription>Active sensor alerts</CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
+              Active sensor alerts
+            </CardDescription>
           </div>
           {alerts.length > 0 && (
             <Badge variant="destructive" className="text-xs">
@@ -30,11 +38,11 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
           )}
         </div>
       </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[260px] pr-4">
+      <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+        <ScrollArea className="h-[200px] pr-3 sm:h-[260px] sm:pr-4">
           {alerts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 text-center">
-              <CheckCircle2 className="mb-3 h-10 w-10 text-primary/50" />
+            <div className="flex flex-col items-center justify-center py-8 text-center sm:py-10">
+              <CheckCircle2 className="mb-3 h-8 w-8 text-primary/50 sm:h-10 sm:w-10" />
               <p className="text-sm font-medium text-foreground">All clear</p>
               <p className="text-xs text-muted-foreground">
                 No active alerts at this time
@@ -72,13 +80,11 @@ function AlertItem({ alert }: { alert: Alert }) {
           <AlertTriangle className="h-4 w-4 text-accent" />
         )}
       </div>
-      <div className="flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <p className="text-sm font-medium leading-snug text-foreground">
-            {alert.message}
-          </p>
-        </div>
-        <div className="mt-1.5 flex items-center gap-2">
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium leading-snug text-foreground sm:text-sm">
+          {alert.message}
+        </p>
+        <div className="mt-1.5 flex flex-wrap items-center gap-2">
           <Badge
             variant={isCritical ? "destructive" : "secondary"}
             className="text-[10px]"

@@ -3,13 +3,13 @@
 import { useEffect, useState, useCallback } from "react"
 import { ref, onValue, push, query, orderByChild, limitToLast } from "firebase/database"
 import { database } from "@/lib/firebase"
+import { setSensorReadings, setAlerts, setIsDemo } from "@/lib/store"
 import type { SensorReading, Alert } from "@/lib/types"
 
 const MOISTURE_LOW_THRESHOLD = 30
 const MOISTURE_CRITICAL_THRESHOLD = 15
 const TEMP_HIGH_THRESHOLD = 40
 
-// Generate realistic demo data when Firebase is not configured
 function generateDemoData(): SensorReading[] {
   const now = Date.now()
   const data: SensorReading[] = []
@@ -82,17 +82,22 @@ function generateAlerts(readings: SensorReading[]): Alert[] {
 
 export function useSensorData(userId: string | undefined) {
   const [readings, setReadings] = useState<SensorReading[]>([])
-  const [alerts, setAlerts] = useState<Alert[]>([])
+  const [alerts, _setAlerts] = useState<Alert[]>([])
   const [loading, setLoading] = useState(true)
-  const [isDemo, setIsDemo] = useState(false)
+  const [isDemo, _setIsDemo] = useState(false)
 
   useEffect(() => {
     if (!userId || !database) {
-      // Use demo data when Firebase is not available
       const demoData = generateDemoData()
       setReadings(demoData)
+      _setAlerts(generateAlerts(demoData))
+      _setIsDemo(true)
+
+      // Push into SWR cache
+      setSensorReadings(demoData)
       setAlerts(generateAlerts(demoData))
       setIsDemo(true)
+
       setLoading(false)
       return
     }
@@ -109,8 +114,15 @@ export function useSensorData(userId: string | undefined) {
         data.push({ id: child.key!, ...child.val() })
       })
       data.sort((a, b) => a.timestamp - b.timestamp)
+      const newAlerts = generateAlerts(data)
+
       setReadings(data)
-      setAlerts(generateAlerts(data))
+      _setAlerts(newAlerts)
+
+      // Push into SWR cache
+      setSensorReadings(data)
+      setAlerts(newAlerts)
+
       setLoading(false)
     })
 
@@ -143,10 +155,16 @@ export function useSensorData(userId: string | undefined) {
           deviceId: "sensor-01",
         }
         const updated = [...prev.slice(1), newReading]
-        setAlerts(generateAlerts(updated))
+        const newAlerts = generateAlerts(updated)
+        _setAlerts(newAlerts)
+
+        // Push into SWR cache
+        setSensorReadings(updated)
+        setAlerts(newAlerts)
+
         return updated
       })
-    }, 10000) // Update every 10 seconds
+    }, 10000)
     return () => clearInterval(interval)
   }, [isDemo])
 

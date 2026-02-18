@@ -6,7 +6,13 @@ import { useAuth } from "@/lib/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { toast } from "sonner"
 import { Leaf, Loader2 } from "lucide-react"
 
@@ -28,12 +34,18 @@ export function AuthForm() {
         await signIn(email, password)
         toast.success("Welcome back!")
       } else {
+        if (!displayName.trim()) {
+          toast.error("Please enter a farm name")
+          setIsLoading(false)
+          return
+        }
         await signUp(email, password, displayName)
         toast.success("Account created successfully!")
       }
       router.push("/dashboard")
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Authentication failed"
+      const message =
+        error instanceof Error ? error.message : "Authentication failed"
       toast.error(message)
     } finally {
       setIsLoading(false)
@@ -54,7 +66,7 @@ export function AuthForm() {
         <CardTitle className="font-serif text-2xl">
           {isLogin ? "Welcome back" : "Create your account"}
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-sm">
           {isLogin
             ? "Sign in to access your farm dashboard"
             : "Start monitoring your farm today"}
@@ -73,6 +85,7 @@ export function AuthForm() {
                 onChange={(e) => setDisplayName(e.target.value)}
                 required={!isLogin}
                 disabled={isLoading}
+                autoComplete="organization"
               />
             </div>
           )}
@@ -86,6 +99,7 @@ export function AuthForm() {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={isLoading}
+              autoComplete="email"
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -99,13 +113,16 @@ export function AuthForm() {
               required
               minLength={6}
               disabled={isLoading}
+              autoComplete={isLogin ? "current-password" : "new-password"}
             />
           </div>
+
           <Button type="submit" className="mt-2 w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isLogin ? "Sign In" : "Create Account"}
           </Button>
 
+          {/* Divider */}
           <div className="relative my-2">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t border-border" />

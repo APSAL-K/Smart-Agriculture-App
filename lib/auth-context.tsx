@@ -5,19 +5,25 @@ import {
   useContext,
   useEffect,
   useState,
+  useCallback,
   type ReactNode,
 } from "react"
-import type { User } from "firebase/auth"
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  updateProfile,
+  type User,
+} from "firebase/auth"
+import { ref, set } from "firebase/database"
+import { auth, database } from "@/lib/firebase"
 
 interface AuthContextType {
   user: User | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (
-    email: string,
-    password: string,
-    displayName: string
-  ) => Promise<void>
+  signUp: (email: string, password: string, displayName: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -28,70 +34,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let unsubscribe: (() => void) | undefined
-
-    async function initAuth() {
-      try {
-        const { auth } = await import("@/lib/firebase")
-        if (!auth) {
-          setLoading(false)
-          return
-        }
-        const { onAuthStateChanged } = await import("firebase/auth")
-        unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-          setUser(firebaseUser)
-          setLoading(false)
-        })
-      } catch {
-        setLoading(false)
-      }
+    if (!auth) {
+      setLoading(false)
+      return
     }
-
-    initAuth()
-    return () => unsubscribe?.()
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser)
+      setLoading(false)
+    })
+    return unsubscribe
   }, [])
 
-  const signIn = async (email: string, password: string) => {
-    const { auth } = await import("@/lib/firebase")
-    if (!auth) throw new Error("Firebase not configured")
-    const { signInWithEmailAndPassword } = await import("firebase/auth")
+  const signIn = useCallback(async (email: string, password: string) => {
+    if (!auth) throw new Error("Firebase not configured. Please add your Firebase environment variables.")
     await signInWithEmailAndPassword(auth, email, password)
-  }
+  }, [])
 
-  const signUp = async (
-    email: string,
-    password: string,
-    displayName: string
-  ) => {
-    const { auth, database } = await import("@/lib/firebase")
-    if (!auth || !database) throw new Error("Firebase not configured")
-    const { createUserWithEmailAndPassword, updateProfile } = await import(
-      "firebase/auth"
-    )
-    const { ref, set } = await import("firebase/database")
-    const credential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    )
-    await updateProfile(credential.user, { displayName })
-    await set(ref(database, `users/${credential.user.uid}`), {
-      displayName,
-      email,
-      createdAt: new Date().toISOString(),
-      role: "farmer",
-    })
-  }
+  const signUp = useCallback(
+    async (email: string, password: string, displayName: string) => {
+      if (!auth || !database)
+        throw new Error("Firebase not configured. Please add your Firebase environment variables.")
+      const credential = await createUserWithEmailAndPassword(auth, email, password)
+      await updateProfile(credential.user, { displayName })
+      await set(ref(database, `users/${credential.user.uid}`), {
+        displayName,
+        email,
+        createdAt: new Date().toISOString(),
+        role: "farmer",
+      })
+    },
+    []
+  )
 
-  const signOut = async () => {
-    const { auth } = await import("@/lib/firebase")
-    if (!auth) throw new Error("Firebase not configured")
-    const { signOut: firebaseSignOut } = await import("firebase/auth")
+  const handleSignOut = useCallback(async () => {
+    if (!auth) throw new Error("Firebase not configured.")
     await firebaseSignOut(auth)
-  }
+  }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider
+      value={{ user, loading, signIn, signUp, signOut: handleSignOut }}
+    >
       {children}
     </AuthContext.Provider>
   )
