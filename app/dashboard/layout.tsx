@@ -1,15 +1,29 @@
 "use client"
 
+import { useEffect } from "react"
+import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { DashboardNav } from "@/components/dashboard-nav"
-import { Leaf } from "lucide-react"
+import { Leaf, Info } from "lucide-react"
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const { loading } = useAuth()
+  const { user, loading } = useAuth()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const isOnboardingComplete = user?.farmInfo?.isOnboardingComplete
+
+  useEffect(() => {
+    if (!loading && !isOnboardingComplete) {
+      if (pathname !== "/dashboard/data-collection" && pathname !== "/dashboard/profile") {
+        router.push("/dashboard/data-collection")
+      }
+    }
+  }, [loading, isOnboardingComplete, pathname, router])
 
   if (loading) {
     return (
@@ -27,6 +41,14 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-svh flex-col bg-background">
       <DashboardNav />
+      {!isOnboardingComplete && pathname === "/dashboard/data-collection" && (
+        <div className="bg-primary/10 border-b border-primary/20 px-4 py-3 flex items-center justify-center gap-3">
+          <Info className="h-4 w-4 text-primary" />
+          <p className="text-sm font-medium text-primary">
+            Onboarding Required: Please complete your farm information to unlock the dashboard.
+          </p>
+        </div>
+      )}
       <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">{children}</main>
     </div>
   )

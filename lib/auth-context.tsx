@@ -8,72 +8,132 @@ import {
   useCallback,
   type ReactNode,
 } from "react"
-import {
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  updateProfile,
-  type User,
-} from "firebase/auth"
-import { ref, set } from "firebase/database"
-import { auth, database } from "@/lib/firebase"
+import { useRouter } from "next/navigation"
+
+import type { FarmInfo } from "./types"
+
+interface User {
+  uid: string
+  email: string
+  displayName?: string
+  location?: string
+  farmInfo?: FarmInfo
+}
 
 interface AuthContextType {
   user: User | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string, displayName: string) => Promise<void>
+  updateProfile: (data: Partial<User>) => Promise<void>
+  updatePassword: (newPassword: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+const STORAGE_KEY = "smart_agri_user"
+const USERS_DB_KEY = "smart_agri_users_db"
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!auth) {
-      setLoading(false)
-      return
+    // Load user from localStorage on mount
+    const savedUser = localStorage.getItem(STORAGE_KEY)
+    if (savedUser) {
+      setUser(JSON.parse(savedUser))
     }
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser)
-      setLoading(false)
-    })
-    return unsubscribe
+    setLoading(false)
   }, [])
 
   const signIn = useCallback(async (email: string, password: string) => {
-    if (!auth) throw new Error("Firebase not configured. Please add your Firebase environment variables.")
-    await signInWithEmailAndPassword(auth, email, password)
+    const usersDb = JSON.parse(localStorage.getItem(USERS_DB_KEY) || "[]")
+    const foundUser = usersDb.find((u: any) => u.email === email && u.password === password)
+
+    if (foundUser) {
+      const userData = {
+        uid: foundUser.uid,
+        email: foundUser.email,
+        displayName: foundUser.displayName,
+        location: foundUser.location || "California, USA",
+        farmInfo: foundUser.farmInfo
+      }
+      setUser(userData)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(userData))
+    } else {
+      throw new Error("Invalid email or password")
+    }
   }, [])
 
   const signUp = useCallback(
     async (email: string, password: string, displayName: string) => {
-      if (!auth || !database)
-        throw new Error("Firebase not configured. Please add your Firebase environment variables.")
-      const credential = await createUserWithEmailAndPassword(auth, email, password)
-      await updateProfile(credential.user, { displayName })
-      await set(ref(database, `users/${credential.user.uid}`), {
-        displayName,
+      const usersDb = JSON.parse(localStorage.getItem(USERS_DB_KEY) || "[]")
+      if (usersDb.find((u: any) => u.email === email)) {
+        throw new Error("User already exists")
+      }
+
+      const newUser = {
+        uid: Math.random().toString(36).substring(7),
         email,
+        password,
+        displayName,
+        location: "California, USA", // Default location
         createdAt: new Date().toISOString(),
-        role: "farmer",
-      })
+        farmInfo: undefined
+      }
+
+      usersDb.push(newUser)
+      localStorage.setItem(USERS_DB_KEY, JSON.stringify(usersDb))
+
+      const userData = {
+        uid: newUser.uid,
+        email: newUser.email,
+        displayName: newUser.displayName,
+        location: newUser.location,
+        farmInfo: newUser.farmInfo
+      }
+      setUser(userData)
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(userData))
     },
     []
   )
 
+  const updateProfile = useCallback(async (data: Partial<User>) => {
+    if (!user) return
+
+    // Update session
+    const updatedUser = { ...user, ...data }
+    setUser(updatedUser)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUser))
+
+    // Update "DB"
+    const usersDb = JSON.parse(localStorage.getItem(USERS_DB_KEY) || "[]")
+    const updatedDb = usersDb.map((u: any) =>
+      u.uid === user.uid ? { ...u, ...data } : u
+    )
+    localStorage.setItem(USERS_DB_KEY, JSON.stringify(updatedDb))
+  }, [user])
+
+  const updatePassword = useCallback(async (newPassword: string) => {
+    if (!user) return
+
+    const usersDb = JSON.parse(localStorage.getItem(USERS_DB_KEY) || "[]")
+    const updatedDb = usersDb.map((u: any) =>
+      u.uid === user.uid ? { ...u, password: newPassword } : u
+    )
+    localStorage.setItem(USERS_DB_KEY, JSON.stringify(updatedDb))
+  }, [user])
+
   const handleSignOut = useCallback(async () => {
-    if (!auth) throw new Error("Firebase not configured.")
-    await firebaseSignOut(auth)
+    setUser(null)
+    localStorage.removeItem(STORAGE_KEY)
   }, [])
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, signIn, signUp, signOut: handleSignOut }}
+      value={{ user, loading, signIn, signUp, updateProfile, updatePassword, signOut: handleSignOut }}
     >
       {children}
     </AuthContext.Provider>

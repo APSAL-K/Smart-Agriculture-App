@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { AlertTriangle, AlertCircle, CheckCircle2, Bell } from "lucide-react"
 import type { Alert } from "@/lib/types"
+import { useTranslation } from "@/lib/use-translation"
 import { cn } from "@/lib/utils"
 
 interface AlertsPanelProps {
@@ -18,14 +19,15 @@ interface AlertsPanelProps {
 }
 
 export function AlertsPanel({ alerts }: AlertsPanelProps) {
+  const { t } = useTranslation()
   return (
     <Card className="h-full">
       <CardHeader className="p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2 font-serif text-base sm:text-lg">
-              <Bell className="h-4 w-4" />
-              Alerts
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              {t('analytics')}
             </CardTitle>
             <CardDescription className="text-xs sm:text-sm">
               Active sensor alerts

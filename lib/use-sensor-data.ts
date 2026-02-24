@@ -4,98 +4,47 @@ import { useEffect, useState, useCallback } from "react"
 import { ref, onValue, push, query, orderByChild, limitToLast } from "firebase/database"
 import { database } from "@/lib/firebase"
 import { setSensorReadings, setAlerts, setIsDemo } from "@/lib/store"
-import type { SensorReading, Alert } from "@/lib/types"
+import type { SensorReading, Alert, FarmInfo } from "@/lib/types"
+import { generateDemoData, generateLiveReading } from "./modules/data-collection"
+import { generateAlerts } from "./modules/alert-system"
+import { toast } from "sonner"
 
-const MOISTURE_LOW_THRESHOLD = 30
-const MOISTURE_CRITICAL_THRESHOLD = 15
-const TEMP_HIGH_THRESHOLD = 40
-
-function generateDemoData(): SensorReading[] {
-  const now = Date.now()
-  const data: SensorReading[] = []
-  for (let i = 23; i >= 0; i--) {
-    data.push({
-      id: `demo-${i}`,
-      soilMoisture: 25 + Math.random() * 50,
-      temperature: 18 + Math.random() * 15,
-      humidity: 40 + Math.random() * 40,
-      timestamp: now - i * 3600000,
-      deviceId: "sensor-01",
-    })
-  }
-  return data
-}
-
-function generateAlerts(readings: SensorReading[]): Alert[] {
-  const alerts: Alert[] = []
-  const latest = readings[readings.length - 1]
-  if (!latest) return alerts
-
-  if (latest.soilMoisture < MOISTURE_CRITICAL_THRESHOLD) {
-    alerts.push({
-      id: `alert-moisture-critical-${latest.timestamp}`,
-      type: "low_moisture",
-      message: `Critical: Soil moisture at ${latest.soilMoisture.toFixed(1)}%. Immediate irrigation required.`,
-      severity: "critical",
-      timestamp: latest.timestamp,
-      acknowledged: false,
-      sensorReading: latest,
-    })
-  } else if (latest.soilMoisture < MOISTURE_LOW_THRESHOLD) {
-    alerts.push({
-      id: `alert-moisture-${latest.timestamp}`,
-      type: "low_moisture",
-      message: `Warning: Soil moisture at ${latest.soilMoisture.toFixed(1)}%. Consider irrigating soon.`,
-      severity: "warning",
-      timestamp: latest.timestamp,
-      acknowledged: false,
-      sensorReading: latest,
-    })
-  }
-
-  if (latest.temperature > TEMP_HIGH_THRESHOLD) {
-    alerts.push({
-      id: `alert-temp-${latest.timestamp}`,
-      type: "high_temperature",
-      message: `High temperature detected: ${latest.temperature.toFixed(1)}°C. Increase watering frequency.`,
-      severity: "warning",
-      timestamp: latest.timestamp,
-      acknowledged: false,
-      sensorReading: latest,
-    })
-  }
-
-  if (latest.humidity < 30) {
-    alerts.push({
-      id: `alert-humidity-${latest.timestamp}`,
-      type: "low_humidity",
-      message: `Low humidity: ${latest.humidity.toFixed(1)}%. Monitor crop stress levels.`,
-      severity: "warning",
-      timestamp: latest.timestamp,
-      acknowledged: false,
-      sensorReading: latest,
-    })
-  }
-
-  return alerts
-}
-
-export function useSensorData(userId: string | undefined) {
+export function useSensorData(userId: string | undefined, farmInfo?: FarmInfo) {
   const [readings, setReadings] = useState<SensorReading[]>([])
   const [alerts, _setAlerts] = useState<Alert[]>([])
   const [loading, setLoading] = useState(true)
   const [isDemo, _setIsDemo] = useState(false)
 
+  // Track seen IDs to prevent duplicate toasts
+  const [seenAlertIds, setSeenAlertIds] = useState<Set<string>>(new Set())
+
+  const processAlerts = useCallback((newReadings: SensorReading[], info?: FarmInfo) => {
+    const generatedAlerts = generateAlerts(newReadings, info)
+
+    // Check for new critical alerts to "push"
+    generatedAlerts.forEach(alert => {
+      if (alert.severity === 'critical' && !seenAlertIds.has(alert.id)) {
+        toast.error(`CRITICAL ALERT: ${alert.message}`, {
+          duration: 10000,
+          position: "top-right"
+        })
+        setSeenAlertIds(prev => new Set(prev).add(alert.id))
+      }
+    })
+
+    return generatedAlerts
+  }, [seenAlertIds])
+
   useEffect(() => {
     if (!userId || !database) {
       const demoData = generateDemoData()
+      const demoAlerts = processAlerts(demoData, farmInfo)
       setReadings(demoData)
-      _setAlerts(generateAlerts(demoData))
+      _setAlerts(demoAlerts)
       _setIsDemo(true)
 
-      // Push into SWR cache
       setSensorReadings(demoData)
-      setAlerts(generateAlerts(demoData))
+      setAlerts(demoAlerts)
       setIsDemo(true)
 
       setLoading(false)
@@ -114,12 +63,11 @@ export function useSensorData(userId: string | undefined) {
         data.push({ id: child.key!, ...child.val() })
       })
       data.sort((a, b) => a.timestamp - b.timestamp)
-      const newAlerts = generateAlerts(data)
+      const newAlerts = processAlerts(data, farmInfo)
 
       setReadings(data)
       _setAlerts(newAlerts)
 
-      // Push into SWR cache
       setSensorReadings(data)
       setAlerts(newAlerts)
 
@@ -127,7 +75,7 @@ export function useSensorData(userId: string | undefined) {
     })
 
     return () => unsubscribe()
-  }, [userId])
+  }, [userId, farmInfo, processAlerts])
 
   const addReading = useCallback(
     async (reading: Omit<SensorReading, "id" | "timestamp">) => {
@@ -146,14 +94,7 @@ export function useSensorData(userId: string | undefined) {
     if (!isDemo) return
     const interval = setInterval(() => {
       setReadings((prev) => {
-        const newReading: SensorReading = {
-          id: `demo-live-${Date.now()}`,
-          soilMoisture: 25 + Math.random() * 50,
-          temperature: 18 + Math.random() * 15,
-          humidity: 40 + Math.random() * 40,
-          timestamp: Date.now(),
-          deviceId: "sensor-01",
-        }
+        const newReading = generateLiveReading()
         const updated = [...prev.slice(1), newReading]
         const newAlerts = generateAlerts(updated)
         _setAlerts(newAlerts)
@@ -168,5 +109,7 @@ export function useSensorData(userId: string | undefined) {
     return () => clearInterval(interval)
   }, [isDemo])
 
-  return { readings, alerts, loading, addReading, isDemo }
+  const latestWeather = readings[readings.length - 1]?.weather
+
+  return { readings, alerts, loading, addReading, isDemo, latestWeather }
 }

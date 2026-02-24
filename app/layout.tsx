@@ -1,14 +1,13 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Space_Grotesk } from 'next/font/google'
 import { Toaster } from 'sonner'
-import { AuthProvider } from '@/lib/auth-context'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk' })
 
 export const metadata: Metadata = {
-  title: 'AgroSense - Smart Agriculture Dashboard',
+  title: 'Smart Agriculture - Dashboard',
   description:
     'Monitor soil moisture, temperature, and humidity in real-time. Get smart irrigation recommendations for your farm.',
 }
@@ -19,6 +18,8 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
+import { Providers } from '@/components/providers'
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,9 +28,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
-        <AuthProvider>
+        <Providers>
           {children}
-        </AuthProvider>
+        </Providers>
         <Toaster position="top-right" richColors />
       </body>
     </html>

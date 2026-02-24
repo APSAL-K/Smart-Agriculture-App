@@ -12,10 +12,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Leaf, LogOut, User } from "lucide-react"
+import { Leaf, LogOut, User, Settings, UserCircle, Database, Lightbulb } from "lucide-react"
 import { toast } from "sonner"
+import { useTranslation } from "@/lib/use-translation"
 
 export function DashboardNav() {
+  const { t } = useTranslation()
   const { user, signOut } = useAuth()
   const router = useRouter()
 
@@ -31,11 +33,11 @@ export function DashboardNav() {
 
   const initials = user?.displayName
     ? user.displayName
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
     : "DF"
 
   return (
@@ -47,9 +49,37 @@ export function DashboardNav() {
             <Leaf className="h-4 w-4 text-primary-foreground" />
           </div>
           <span className="font-serif text-lg font-bold tracking-tight text-foreground">
-            AgroSense
+            {t('appName')}
           </span>
         </Link>
+
+        {/* Desktop Nav Links */}
+        <nav className="hidden md:flex items-center gap-6 mx-6">
+          <Link
+            href="/dashboard"
+            className={`text-sm font-medium transition-colors hover:text-primary ${!user?.farmInfo?.isOnboardingComplete ? 'opacity-50 pointer-events-none' : ''}`}
+          >
+            {t('dashboard')}
+          </Link>
+          <Link
+            href="/dashboard/data-collection"
+            className="text-sm font-medium hover:text-primary transition-colors"
+          >
+            {t('dataCollection')}
+          </Link>
+          <Link
+            href="/dashboard/recommendations"
+            className={`text-sm font-medium transition-colors hover:text-primary ${!user?.farmInfo?.isOnboardingComplete ? 'opacity-50 pointer-events-none' : ''}`}
+          >
+            {t('recommendations')}
+          </Link>
+          <Link
+            href="/dashboard/profile"
+            className="text-sm font-medium hover:text-primary transition-colors"
+          >
+            {t('profile')}
+          </Link>
+        </nav>
 
         {/* Right actions */}
         <div className="flex items-center gap-2 sm:gap-3">
@@ -85,24 +115,44 @@ export function DashboardNav() {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/data-collection" className="flex items-center w-full cursor-pointer">
+                    <Database className="mr-2 h-4 w-4" />
+                    {t('dataCollection')}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/recommendations" className="flex items-center w-full cursor-pointer">
+                    <Lightbulb className="mr-2 h-4 w-4" />
+                    {t('recommendations')}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/profile" className="flex items-center w-full cursor-pointer">
+                    <UserCircle className="mr-2 h-4 w-4" />
+                    {t('profile')}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/settings" className="flex items-center w-full cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    {t('settings')}
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={handleSignOut}
-                  className="text-destructive focus:text-destructive"
+                  className="text-destructive focus:text-destructive cursor-pointer"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  Sign out
+                  {t('signOut')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <Link href="/">
               <Button size="sm" variant="outline">
-                Sign In
+                {t('signIn')}
               </Button>
             </Link>
           )}

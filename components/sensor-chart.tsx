@@ -18,6 +18,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { useTranslation } from "@/lib/use-translation"
 import type { SensorReading } from "@/lib/types"
 
 interface SensorChartProps {
@@ -33,30 +34,31 @@ const metrics: {
   color: string
   unit: string
 }[] = [
-  {
-    key: "soilMoisture",
-    label: "Soil Moisture",
-    shortLabel: "Moisture",
-    color: "var(--color-chart-1)",
-    unit: "%",
-  },
-  {
-    key: "temperature",
-    label: "Temperature",
-    shortLabel: "Temp",
-    color: "var(--color-chart-5)",
-    unit: "\u00B0C",
-  },
-  {
-    key: "humidity",
-    label: "Humidity",
-    shortLabel: "Humidity",
-    color: "var(--color-chart-4)",
-    unit: "%",
-  },
-]
+    {
+      key: "soilMoisture",
+      label: "Soil Moisture",
+      shortLabel: "Moisture",
+      color: "var(--color-chart-1)",
+      unit: "%",
+    },
+    {
+      key: "temperature",
+      label: "Temperature",
+      shortLabel: "Temp",
+      color: "var(--color-chart-5)",
+      unit: "\u00B0C",
+    },
+    {
+      key: "humidity",
+      label: "Humidity",
+      shortLabel: "Humidity",
+      color: "var(--color-chart-4)",
+      unit: "%",
+    },
+  ]
 
 export function SensorChart({ readings }: SensorChartProps) {
+  const { t } = useTranslation()
   const [activeMetric, setActiveMetric] = useState<MetricKey>("soilMoisture")
 
   const chartData = readings.map((r) => ({
@@ -77,7 +79,7 @@ export function SensorChart({ readings }: SensorChartProps) {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle className="font-serif text-base sm:text-lg">
-              Sensor Trends
+              {t('sensorTrends')}
             </CardTitle>
             <CardDescription className="text-xs sm:text-sm">
               Last 24 hours of readings
@@ -92,8 +94,12 @@ export function SensorChart({ readings }: SensorChartProps) {
                 className="px-2 text-xs sm:px-3"
                 onClick={() => setActiveMetric(metric.key)}
               >
-                <span className="sm:hidden">{metric.shortLabel}</span>
-                <span className="hidden sm:inline">{metric.label}</span>
+                <span className="sm:hidden">
+                  {metric.key === 'soilMoisture' ? t('moisture') : metric.key === 'temperature' ? t('temp') : t('humidity')}
+                </span>
+                <span className="hidden sm:inline">
+                  {metric.key === 'soilMoisture' ? t('soilMoisture') : metric.key === 'temperature' ? t('temperature') : t('humidity')}
+                </span>
               </Button>
             ))}
           </div>

@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
+import { useTranslation } from "@/lib/use-translation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -22,6 +23,7 @@ export function AuthForm() {
   const [password, setPassword] = useState("")
   const [displayName, setDisplayName] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const { t } = useTranslation()
   const { signIn, signUp } = useAuth()
   const router = useRouter()
 
@@ -64,7 +66,7 @@ export function AuthForm() {
           <Leaf className="h-6 w-6 text-primary" />
         </div>
         <CardTitle className="font-serif text-2xl">
-          {isLogin ? "Welcome back" : "Create your account"}
+          {isLogin ? t('welcome') : t('signUp')}
         </CardTitle>
         <CardDescription className="text-sm">
           {isLogin
@@ -76,7 +78,7 @@ export function AuthForm() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {!isLogin && (
             <div className="flex flex-col gap-2">
-              <Label htmlFor="displayName">Farm Name</Label>
+              <Label htmlFor="displayName">{t('farmName')}</Label>
               <Input
                 id="displayName"
                 type="text"
@@ -90,7 +92,7 @@ export function AuthForm() {
             </div>
           )}
           <div className="flex flex-col gap-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('email')}</Label>
             <Input
               id="email"
               type="email"
@@ -103,7 +105,7 @@ export function AuthForm() {
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{t('password')}</Label>
             <Input
               id="password"
               type="password"
@@ -119,7 +121,7 @@ export function AuthForm() {
 
           <Button type="submit" className="mt-2 w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isLogin ? "Sign In" : "Create Account"}
+            {isLogin ? t('signIn') : t('signUp')}
           </Button>
 
           {/* Divider */}
@@ -138,7 +140,7 @@ export function AuthForm() {
             className="w-full"
             onClick={handleDemoLogin}
           >
-            Try Demo Dashboard
+            {t('demoMode')}
           </Button>
         </form>
 
@@ -149,7 +151,7 @@ export function AuthForm() {
             onClick={() => setIsLogin(!isLogin)}
             className="font-medium text-primary underline-offset-4 hover:underline"
           >
-            {isLogin ? "Sign up" : "Sign in"}
+            {isLogin ? t('signUp') : t('signIn')}
           </button>
         </p>
       </CardContent>

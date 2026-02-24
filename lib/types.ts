@@ -1,3 +1,10 @@
+export interface WeatherData {
+  temp: number
+  humidity: number
+  condition: string
+  windSpeed: number
+}
+
 export interface SensorReading {
   id: string
   soilMoisture: number
@@ -5,6 +12,7 @@ export interface SensorReading {
   humidity: number
   timestamp: number
   deviceId: string
+  weather?: WeatherData
 }
 
 export interface Alert {
@@ -24,9 +32,34 @@ export interface IrrigationRecommendation {
   action: string
 }
 
+export interface FarmInfo {
+  cropType: string
+  soilType: string
+  farmSize: string
+  irrigationMethod: string
+  region?: string
+  season?: string
+  plantingDate?: number
+  expectedHarvest?: number
+  waterSource?: string
+  fertilizerHistory?: string
+  targetYield?: string
+  automationLevel?: "manual" | "semi" | "full"
+  isOnboardingComplete?: boolean
+  lastUpdated: number
+}
+
+export interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: number
+}
+
 export interface UserProfile {
   displayName: string
   email: string
   createdAt: string
   role: "farmer" | "admin"
+  farmInfo?: FarmInfo
 }

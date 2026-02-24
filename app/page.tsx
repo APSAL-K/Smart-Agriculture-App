@@ -4,9 +4,11 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { AuthForm } from "@/components/auth-form"
+import { useTranslation } from "@/lib/use-translation"
 import { Leaf, BarChart3, Droplets, Thermometer } from "lucide-react"
 
 export default function HomePage() {
+  const { t } = useTranslation()
   const { user, loading } = useAuth()
   const router = useRouter()
 
@@ -37,7 +39,7 @@ export default function HomePage() {
             <Leaf className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="font-serif text-xl font-bold tracking-tight text-primary-foreground">
-            AgroSense
+            {t('appName')}
           </span>
         </div>
 
@@ -55,17 +57,17 @@ export default function HomePage() {
           <div className="mt-8 grid grid-cols-3 gap-3 sm:gap-4 lg:mt-10">
             <FeatureCard
               icon={<Droplets className="h-5 w-5" />}
-              title="Soil Moisture"
+              title={t('soilMoisture')}
               description="Real-time monitoring"
             />
             <FeatureCard
               icon={<Thermometer className="h-5 w-5" />}
-              title="Temperature"
+              title={t('temperature')}
               description="24/7 tracking"
             />
             <FeatureCard
               icon={<BarChart3 className="h-5 w-5" />}
-              title="Analytics"
+              title={t('analytics')}
               description="Smart insights"
             />
           </div>
