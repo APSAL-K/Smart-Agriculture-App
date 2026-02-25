@@ -137,7 +137,7 @@ export async function generateAiChatResponse(
         switch (provider) {
             case 'Gemini':
                 if (!apiKeys.gemini) return null
-                endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKeys.gemini}`
+                endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKeys.gemini}`
                 body = {
                     contents: messages.map(m => ({
                         role: m.role === 'user' ? 'user' : 'model',
