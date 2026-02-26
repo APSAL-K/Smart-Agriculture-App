@@ -56,6 +56,62 @@ export interface ChatMessage {
   timestamp: number
 }
 
+export type PostType = "question" | "success_story" | "farming_tip"
+
+export interface CommunityComment {
+  id: string
+  authorId: string
+  authorName: string
+  content: string
+  timestamp: number
+}
+
+export interface CommunityPost {
+  id: string
+  authorId: string
+  authorName: string
+  type: PostType
+  title: string
+  content: string
+  timestamp: number
+  likes: string[] // Array of user IDs who liked
+  comments?: CommunityComment[]
+  farmInfo?: FarmInfo // Context of the farm that shared the post
+}
+
+export interface MarketPrice {
+  id: string
+  cropName: string
+  marketName: string
+  currentPrice: number
+  unit: string
+  change: number
+  trend: "up" | "down" | "stable"
+  lastUpdated: number
+}
+
+export interface PriceTrend {
+  date: string
+  price: number
+}
+
+export interface WeatherForecast {
+  date: string
+  high: number
+  low: number
+  condition: string
+  precipitation: number
+}
+
+export interface ExtremeWeatherAlert {
+  id: string
+  type: "storm" | "heatwave" | "drought" | "flood"
+  severity: "info" | "warning" | "critical"
+  message: string
+  timestamp: number
+  expectedStart: number
+}
+
 export interface UserProfile {
   displayName: string
   email: string

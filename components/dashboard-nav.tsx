@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Leaf, LogOut, User, Settings, UserCircle, Database, Lightbulb } from "lucide-react"
+import { Leaf, LogOut, User, Settings, UserCircle, Database, Lightbulb, Users, TrendingUp, CloudRain } from "lucide-react"
 import { toast } from "sonner"
 import { useTranslation } from "@/lib/use-translation"
 
@@ -79,6 +79,24 @@ export function DashboardNav() {
           >
             {t('profile')}
           </Link>
+          <Link
+            href="/dashboard/weather"
+            className="text-sm font-medium hover:text-primary transition-colors"
+          >
+            {t('weather')}
+          </Link>
+          <Link
+            href="/dashboard/community"
+            className="text-sm font-medium hover:text-primary transition-colors"
+          >
+            {t('community')}
+          </Link>
+          <Link
+            href="/dashboard/market-prices"
+            className="text-sm font-medium hover:text-primary transition-colors"
+          >
+            {t('marketPrices')}
+          </Link>
         </nav>
 
         {/* Right actions */}
@@ -131,6 +149,24 @@ export function DashboardNav() {
                   <Link href="/dashboard/profile" className="flex items-center w-full cursor-pointer">
                     <UserCircle className="mr-2 h-4 w-4" />
                     {t('profile')}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/weather" className="flex items-center w-full cursor-pointer">
+                    <CloudRain className="mr-2 h-4 w-4" />
+                    {t('weather')}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/community" className="flex items-center w-full cursor-pointer">
+                    <Users className="mr-2 h-4 w-4" />
+                    {t('community')}
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/market-prices" className="flex items-center w-full cursor-pointer">
+                    <TrendingUp className="mr-2 h-4 w-4" />
+                    {t('marketPrices')}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
