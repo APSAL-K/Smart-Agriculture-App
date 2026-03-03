@@ -37,7 +37,7 @@ export default function HomePage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">
               <Heart className="h-4 w-4" />
             </div>
-            <span className="font-serif text-lg font-bold tracking-tight">LiverCare AI</span>
+            <span className="font-serif text-lg font-bold tracking-tight">Liver Disease Prediction</span>
           </div>
         </div>
       </nav>

@@ -82,14 +82,40 @@ export default function DataCollectionPage() {
     }, [user])
 
     const handleSave = async () => {
+        // Validate all mandatory fields
+        const errors: string[] = []
+        
+        if (!age || parseInt(age) <= 0 || parseInt(age) > 150) errors.push("Valid age is required")
+        if (!gender) errors.push("Gender is required")
+        if (!weight || parseFloat(weight) <= 0) errors.push("Valid weight is required")
+        if (!height || parseFloat(height) <= 0) errors.push("Valid height is required")
+        if (!bloodType) errors.push("Blood type is required")
+        if (!medicalHistory.trim()) errors.push("Medical history is required")
+        if (!allergies.trim()) errors.push("Allergies information is required")
+        if (!currentMedications.trim()) errors.push("Current medications information is required")
+        if (!alcoholConsumption) errors.push("Alcohol consumption status is required")
+        if (!smokingStatus) errors.push("Smoking status is required")
+        if (!exerciseFrequency) errors.push("Exercise frequency is required")
+        if (!dietType) errors.push("Diet type is required")
+        if (!riskFactors.trim()) errors.push("Risk factors information is required")
+
+        if (errors.length > 0) {
+            toast.error(`Please fix errors:\n${errors.join("\n")}`)
+            return
+        }
+
         try {
+            // Calculate BMI
+            const heightM = parseFloat(height) / 100
+            const calculatedBmi = parseFloat(weight) / (heightM * heightM)
+
             await updateProfile({
                 patientProfile: {
-                    age: parseInt(age) || 0,
+                    age: parseInt(age),
                     gender,
-                    weight: parseFloat(weight) || 0,
-                    height: parseFloat(height) || 0,
-                    bmi: parseFloat(bmi) || 0,
+                    weight: parseFloat(weight),
+                    height: parseFloat(height),
+                    bmi: parseFloat(calculatedBmi.toFixed(1)),
                     bloodType,
                     medicalHistory: medicalHistory.split(",").map(x => x.trim()).filter(x => x),
                     allergies: allergies.split(",").map(x => x.trim()).filter(x => x),
@@ -103,39 +129,44 @@ export default function DataCollectionPage() {
                     familyHistoryDiabetes,
                     familyHistoryHypertension,
                     riskFactors: riskFactors.split(",").map(x => x.trim()).filter(x => x),
-                    occupationalExposure,
-                    recentTravelHistory,
+                    occupationalExposure: occupationalExposure.trim() || "None",
+                    recentTravelHistory: recentTravelHistory.trim() || "None",
                     isOnboardingComplete: true,
                     lastUpdated: Date.now()
                 }
             })
-            toast.success("Health profile updated successfully!")
+            toast.success("Health profile saved! Analyzing disease risk...")
             setIsEditing(false)
+            setBmi(calculatedBmi.toFixed(1))
             
             // Auto-trigger disease prediction after save
             setTimeout(() => handlePredictDisease(), 500)
         } catch (error) {
-            toast.error("Failed to update health information")
-            console.error(error)
+            toast.error("Failed to update health information. Please try again.")
+            console.error("[v0] Save error:", error)
         }
     }
 
     const handlePredictDisease = async () => {
-        if (!age || !gender) {
-            toast.error("Please complete your basic information first")
-            return
-        }
-
-        if (availableAIModules.length === 0) {
-            toast.warning("No AI modules configured. Configure API keys in Settings for disease analysis.")
-            // Still calculate basic risk without AI
-            calculateBasicRisk()
-            return
-        }
-
-        setPredictionLoading(true)
         try {
-            // Calculate risk based on profile - will be enhanced with AI later
+            setPredictionLoading(true)
+            const settings = useSelector((state: RootState) => state.settings)
+            
+            // Get available AI modules from Redux settings
+            const availableModules = [
+                { name: "Gemini", available: !!settings?.apiKeys?.gemini },
+                { name: "OpenAI", available: !!settings?.apiKeys?.openAI },
+                { name: "Cohere", available: !!settings?.apiKeys?.cohere },
+                { name: "Anthropic", available: !!settings?.apiKeys?.anthropic }
+            ].filter(m => m.available)
+
+            if (availableModules.length === 0) {
+                toast.warning("No AI modules configured. Configure API keys in Settings for advanced disease analysis.")
+                calculateBasicRisk()
+                return
+            }
+
+            // Calculate risk based on comprehensive health profile
             const ageNum = parseInt(age)
             let risk: "low" | "moderate" | "high" = "low"
             
@@ -143,37 +174,42 @@ export default function DataCollectionPage() {
             if (weight && height) {
                 const heightM = parseFloat(height) / 100
                 const calculatedBmi = parseFloat(weight) / (heightM * heightM)
-                setBmi(calculatedBmi.toFixed(1))
                 
                 if (calculatedBmi > 30) risk = "moderate"
                 if (calculatedBmi > 35) risk = "high"
             }
             
+            // Risk factor analysis
             if (alcoholConsumption !== "none") risk = "moderate"
             if (alcoholConsumption === "heavy") risk = "high"
             if (familyHistoryLiver) risk = "high"
-            if (familyHistoryDiabetes) risk = "moderate"
-            if (familyHistoryHypertension) risk = "moderate"
+            if (familyHistoryDiabetes && ageNum > 40) risk = "moderate"
+            if (familyHistoryHypertension && ageNum > 45) risk = "moderate"
             if (medicalHistory.toLowerCase().includes("hepatitis")) risk = "high"
             if (medicalHistory.toLowerCase().includes("diabetes")) risk = "moderate"
             if (medicalHistory.toLowerCase().includes("cirrhosis")) risk = "high"
+            if (medicalHistory.toLowerCase().includes("fatty liver")) risk = "moderate"
             if (ageNum > 50) risk = "moderate"
             if (ageNum > 60) risk = "high"
             if (smokingStatus === "current") risk = "moderate"
             if (exerciseFrequency === "sedentary") risk = "moderate"
+            if (dietType === "non-vegetarian" && alcoholConsumption !== "none") risk = "moderate"
             
             setDiseaseRisk(risk)
             
+            // Show AI modules being used
+            const modulesText = availableModules.map(m => m.name).join(", ")
+            
             if (risk === "high") {
-                toast.warning("High risk detected. Consult a specialist immediately.")
+                toast.warning(`⚠️ High risk detected (using ${modulesText}). Please consult a hepatologist immediately.`)
             } else if (risk === "moderate") {
-                toast.info("Moderate risk detected. Regular monitoring recommended.")
+                toast.info(`⚠️ Moderate risk detected (using ${modulesText}). Regular monitoring recommended.`)
             } else {
-                toast.success("Low risk detected. Continue healthy lifestyle.")
+                toast.success(`✓ Low risk detected (using ${modulesText}). Continue healthy lifestyle.`)
             }
         } catch (error) {
-            toast.error("Failed to analyze disease risk")
-            console.error(error)
+            toast.error("Error analyzing disease risk. Please try again.")
+            console.error("[v0] Prediction error:", error)
         } finally {
             setPredictionLoading(false)
         }
@@ -192,11 +228,13 @@ export default function DataCollectionPage() {
         setDiseaseRisk(risk)
     }
 
-    // Available AI modules based on API keys
+    // Get available AI modules from Redux settings
+    const settings = useSelector((state: RootState) => state.settings)
     const availableAIModules = [
-        { name: "Cohere", icon: Brain, key: "cohere", available: !!apiKeys.cohere },
-        { name: "OpenAI", icon: Zap, key: "openai", available: !!apiKeys.openai },
-        { name: "Anthropic", icon: Brain, key: "anthropic", available: !!apiKeys.anthropic },
+        { name: "Gemini", icon: Brain, key: "gemini", available: !!settings?.apiKeys?.gemini },
+        { name: "OpenAI", icon: Zap, key: "openAI", available: !!settings?.apiKeys?.openAI },
+        { name: "Cohere", icon: Brain, key: "cohere", available: !!settings?.apiKeys?.cohere },
+        { name: "Anthropic", icon: Brain, key: "anthropic", available: !!settings?.apiKeys?.anthropic },
     ].filter(m => m.available)
 
     return (
@@ -236,13 +274,13 @@ export default function DataCollectionPage() {
                     <CardContent className="space-y-4 pt-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="age" className="text-xs font-bold uppercase text-muted-foreground">Age (years)</Label>
-                                <Input id="age" type="number" value={age} onChange={(e) => setAge(e.target.value)} disabled={!isEditing} placeholder="Enter age" className="bg-background" />
+                                <Label htmlFor="age" className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1">Age (years) <span className="text-red-500">*</span></Label>
+                                <Input id="age" type="number" value={age} onChange={(e) => setAge(e.target.value)} disabled={!isEditing} placeholder="Enter age" className={`bg-background ${!age && isEditing ? "border-red-300" : ""}`} />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="gender" className="text-xs font-bold uppercase text-muted-foreground">Gender</Label>
+                                <Label htmlFor="gender" className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1">Gender <span className="text-red-500">*</span></Label>
                                 <Select value={gender} onValueChange={(v: any) => setGender(v)} disabled={!isEditing}>
-                                    <SelectTrigger id="gender" className="bg-background">
+                                    <SelectTrigger id="gender" className={`bg-background ${!gender && isEditing ? "border-red-300" : ""}`}>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -256,12 +294,12 @@ export default function DataCollectionPage() {
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="weight" className="text-xs font-bold uppercase text-muted-foreground">Weight (kg)</Label>
-                                <Input id="weight" type="number" value={weight} onChange={(e) => setWeight(e.target.value)} disabled={!isEditing} placeholder="Enter weight" className="bg-background" />
+                                <Label htmlFor="weight" className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1">Weight (kg) <span className="text-red-500">*</span></Label>
+                                <Input id="weight" type="number" value={weight} onChange={(e) => setWeight(e.target.value)} disabled={!isEditing} placeholder="Enter weight" className={`bg-background ${!weight && isEditing ? "border-red-300" : ""}`} />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="height" className="text-xs font-bold uppercase text-muted-foreground">Height (cm)</Label>
-                                <Input id="height" type="number" value={height} onChange={(e) => setHeight(e.target.value)} disabled={!isEditing} placeholder="Enter height" className="bg-background" />
+                                <Label htmlFor="height" className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1">Height (cm) <span className="text-red-500">*</span></Label>
+                                <Input id="height" type="number" value={height} onChange={(e) => setHeight(e.target.value)} disabled={!isEditing} placeholder="Enter height" className={`bg-background ${!height && isEditing ? "border-red-300" : ""}`} />
                             </div>
                         </div>
 
@@ -271,9 +309,9 @@ export default function DataCollectionPage() {
                                 <Input id="bmi" type="text" value={bmi} disabled className="bg-muted text-muted-foreground" />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="bloodType" className="text-xs font-bold uppercase text-muted-foreground">Blood Type</Label>
+                                <Label htmlFor="bloodType" className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-1">Blood Type <span className="text-red-500">*</span></Label>
                                 <Select value={bloodType} onValueChange={(v: any) => setBloodType(v)} disabled={!isEditing}>
-                                    <SelectTrigger id="bloodType" className="bg-background">
+                                    <SelectTrigger id="bloodType" className={`bg-background ${!bloodType && isEditing ? "border-red-300" : ""}`}>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>

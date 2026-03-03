@@ -48,9 +48,7 @@ export function DashboardNav() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <Heart className="h-4 w-4 text-primary-foreground" />
           </div>
-          <span className="font-serif text-lg font-bold tracking-tight text-foreground">
-            LiverCare AI
-          </span>
+          <span className="font-semibold hidden sm:inline">Liver Disease Prediction</span>
         </Link>
 
         {/* Desktop Nav Links */}
