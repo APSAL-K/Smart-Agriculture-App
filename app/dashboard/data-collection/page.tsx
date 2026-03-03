@@ -21,10 +21,11 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import { Database, Heart, Microscope, AlertCircle, Activity, Brain, Zap, CheckCircle2, Loader2 } from "lucide-react"
+import { Database, Heart, Microscope, AlertCircle, Activity, Brain, Zap, CheckCircle2, Loader2, Sparkles } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useSelector } from "react-redux"
 import type { RootState } from "@/lib/redux/store"
+import { DiseaseAnalysisModal } from "@/components/disease-analysis-modal"
 
 export default function DataCollectionPage() {
     const { user, updateProfile } = useAuth()
@@ -32,6 +33,7 @@ export default function DataCollectionPage() {
     const [isEditing, setIsEditing] = useState(false)
     const [predictionLoading, setPredictionLoading] = useState(false)
     const [diseaseRisk, setDiseaseRisk] = useState<"low" | "moderate" | "high" | null>(null)
+    const [showAnalysisModal, setShowAnalysisModal] = useState(false)
     const apiKeys = useSelector((state: RootState) => state.settings.apiKeys)
 
     // Patient Profile
@@ -150,69 +152,27 @@ export default function DataCollectionPage() {
     const handlePredictDisease = async () => {
         try {
             setPredictionLoading(true)
-            const settings = useSelector((state: RootState) => state.settings)
-            
-            // Get available AI modules from Redux settings
-            const availableModules = [
-                { name: "Gemini", available: !!settings?.apiKeys?.gemini },
-                { name: "OpenAI", available: !!settings?.apiKeys?.openAI },
-                { name: "Cohere", available: !!settings?.apiKeys?.cohere },
-                { name: "Anthropic", available: !!settings?.apiKeys?.anthropic }
-            ].filter(m => m.available)
 
-            if (availableModules.length === 0) {
-                toast.warning("No AI modules configured. Configure API keys in Settings for advanced disease analysis.")
-                calculateBasicRisk()
+            if (!hasAPIKeys) {
+                toast.warning("No AI modules configured. Please set API keys in Settings first.")
+                setShowAnalysisModal(true)
+                setPredictionLoading(false)
                 return
             }
 
-            // Calculate risk based on comprehensive health profile
-            const ageNum = parseInt(age)
-            let risk: "low" | "moderate" | "high" = "low"
-            
-            // BMI calculation and check
-            if (weight && height) {
-                const heightM = parseFloat(height) / 100
-                const calculatedBmi = parseFloat(weight) / (heightM * heightM)
-                
-                if (calculatedBmi > 30) risk = "moderate"
-                if (calculatedBmi > 35) risk = "high"
-            }
-            
-            // Risk factor analysis
-            if (alcoholConsumption !== "none") risk = "moderate"
-            if (alcoholConsumption === "heavy") risk = "high"
-            if (familyHistoryLiver) risk = "high"
-            if (familyHistoryDiabetes && ageNum > 40) risk = "moderate"
-            if (familyHistoryHypertension && ageNum > 45) risk = "moderate"
-            if (medicalHistory.toLowerCase().includes("hepatitis")) risk = "high"
-            if (medicalHistory.toLowerCase().includes("diabetes")) risk = "moderate"
-            if (medicalHistory.toLowerCase().includes("cirrhosis")) risk = "high"
-            if (medicalHistory.toLowerCase().includes("fatty liver")) risk = "moderate"
-            if (ageNum > 50) risk = "moderate"
-            if (ageNum > 60) risk = "high"
-            if (smokingStatus === "current") risk = "moderate"
-            if (exerciseFrequency === "sedentary") risk = "moderate"
-            if (dietType === "non-vegetarian" && alcoholConsumption !== "none") risk = "moderate"
-            
-            setDiseaseRisk(risk)
-            
-            // Show AI modules being used
-            const modulesText = availableModules.map(m => m.name).join(", ")
-            
-            if (risk === "high") {
-                toast.warning(`⚠️ High risk detected (using ${modulesText}). Please consult a hepatologist immediately.`)
-            } else if (risk === "moderate") {
-                toast.info(`⚠️ Moderate risk detected (using ${modulesText}). Regular monitoring recommended.`)
-            } else {
-                toast.success(`✓ Low risk detected (using ${modulesText}). Continue healthy lifestyle.`)
-            }
+            // Open the modal to show analysis
+            setShowAnalysisModal(true)
         } catch (error) {
-            toast.error("Error analyzing disease risk. Please try again.")
+            toast.error("Error opening disease analysis")
             console.error("[v0] Prediction error:", error)
         } finally {
             setPredictionLoading(false)
         }
+    }
+
+    const handleAnalysisComplete = (risk: "low" | "moderate" | "high") => {
+        setDiseaseRisk(risk)
+        toast.success("Disease analysis completed successfully!")
     }
 
     const calculateBasicRisk = () => {
@@ -228,7 +188,7 @@ export default function DataCollectionPage() {
         setDiseaseRisk(risk)
     }
 
-    // Get available AI modules from Redux settings
+    // Get available AI modules from Redux settings at component level (NOT in event handlers)
     const settings = useSelector((state: RootState) => state.settings)
     const availableAIModules = [
         { name: "Gemini", icon: Brain, key: "gemini", available: !!settings?.apiKeys?.gemini },
@@ -236,6 +196,8 @@ export default function DataCollectionPage() {
         { name: "Cohere", icon: Brain, key: "cohere", available: !!settings?.apiKeys?.cohere },
         { name: "Anthropic", icon: Brain, key: "anthropic", available: !!settings?.apiKeys?.anthropic },
     ].filter(m => m.available)
+
+    const hasAPIKeys = availableAIModules.length > 0
 
     return (
         <div className="flex-1 space-y-6 p-4 pt-6 md:p-8 max-w-5xl mx-auto">
@@ -634,7 +596,7 @@ export default function DataCollectionPage() {
                                     return (
                                         <button 
                                             key={module.key}
-                                            onClick={() => toast.info(`${module.name} AI analysis would be applied to your data`)}
+                                            onClick={() => setShowAnalysisModal(true)}
                                             className="flex items-center gap-3 p-3 rounded-lg border-2 border-green-200 bg-green-50/50 hover:bg-green-100/50 transition-all"
                                         >
                                             <Icon className="h-4 w-4 text-green-600" />
@@ -669,6 +631,14 @@ export default function DataCollectionPage() {
                     </Alert>
                 </CardContent>
             </Card>
+
+            {/* Disease Analysis Modal */}
+            <DiseaseAnalysisModal
+                open={showAnalysisModal}
+                onOpenChange={setShowAnalysisModal}
+                patientProfile={user?.patientProfile}
+                onAnalysisComplete={handleAnalysisComplete}
+            />
         </div>
     )
 }

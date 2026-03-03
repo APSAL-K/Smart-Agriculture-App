@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const foundUser = usersDb.find((u: any) => u.email === email && u.password === password)
 
     if (foundUser) {
-      const userData = {
+      const userData: User = {
         uid: foundUser.uid,
         email: foundUser.email,
         displayName: foundUser.displayName,
@@ -69,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setUser(userData)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(userData))
+      console.log("[v0] User logged in successfully:", email)
     } else {
       throw new Error("Invalid email or password")
     }
