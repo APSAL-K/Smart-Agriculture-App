@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { toast } from "sonner"
-import { Leaf, Loader2 } from "lucide-react"
+import { Heart, Loader2 } from "lucide-react"
 
 export function AuthForm() {
   const [isLogin, setIsLogin] = useState(true)
@@ -37,7 +37,7 @@ export function AuthForm() {
         toast.success("Welcome back!")
       } else {
         if (!displayName.trim()) {
-          toast.error("Please enter a farm name")
+          toast.error("Please enter your full name")
           setIsLoading(false)
           return
         }
@@ -60,101 +60,112 @@ export function AuthForm() {
   }
 
   return (
-    <Card className="border-border/50 shadow-lg">
-      <CardHeader className="text-center">
-        <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 lg:hidden">
-          <Leaf className="h-6 w-6 text-primary" />
-        </div>
-        <CardTitle className="font-serif text-2xl">
-          {isLogin ? t('welcome') : t('signUp')}
-        </CardTitle>
-        <CardDescription className="text-sm">
-          {isLogin
-            ? "Sign in to access your farm dashboard"
-            : "Start monitoring your farm today"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {!isLogin && (
+    <div className="space-y-6">
+      <Card className="border border-border/50 shadow-lg rounded-2xl bg-background">
+        <CardHeader className="text-center space-y-3">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 lg:hidden">
+            <Heart className="h-6 w-6 text-primary" />
+          </div>
+          <div className="space-y-2">
+            <CardTitle className="font-serif text-2xl font-bold">
+              {isLogin ? "Welcome Back" : "Create Account"}
+            </CardTitle>
+            <CardDescription className="text-sm">
+              {isLogin
+                ? "Sign in to monitor your liver health"
+                : "Start your liver health journey today"}
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {!isLogin && (
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="displayName" className="text-sm font-semibold">Full Name</Label>
+                <Input
+                  id="displayName"
+                  type="text"
+                  placeholder="John Doe"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  required={!isLogin}
+                  disabled={isLoading}
+                  autoComplete="name"
+                  className="rounded-lg"
+                />
+              </div>
+            )}
             <div className="flex flex-col gap-2">
-              <Label htmlFor="displayName">{t('farmName')}</Label>
+              <Label htmlFor="email" className="text-sm font-semibold">Email</Label>
               <Input
-                id="displayName"
-                type="text"
-                placeholder="Green Valley Farm"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                required={!isLogin}
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
                 disabled={isLoading}
-                autoComplete="organization"
+                autoComplete="email"
+                className="rounded-lg"
               />
             </div>
-          )}
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="email">{t('email')}</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="farmer@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
-              autoComplete="email"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="password">{t('password')}</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              disabled={isLoading}
-              autoComplete={isLogin ? "current-password" : "new-password"}
-            />
-          </div>
-
-          <Button type="submit" className="mt-2 w-full" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isLogin ? t('signIn') : t('signUp')}
-          </Button>
-
-          {/* Divider */}
-          <div className="relative my-2">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="password" className="text-sm font-semibold">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                disabled={isLoading}
+                autoComplete={isLogin ? "current-password" : "new-password"}
+                className="rounded-lg"
+              />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">or</span>
+
+            <Button 
+              type="submit" 
+              className="mt-2 w-full rounded-lg h-10 font-semibold" 
+              disabled={isLoading}
+            >
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isLogin ? "Sign In" : "Create Account"}
+            </Button>
+
+            {/* Divider */}
+            <div className="relative my-2">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">or</span>
+              </div>
             </div>
-          </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={handleDemoLogin}
-          >
-            {t('demoMode')}
-          </Button>
-        </form>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full rounded-lg h-10"
+              onClick={handleDemoLogin}
+            >
+              Try Demo
+            </Button>
+          </form>
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          {isLogin ? "Don't have an account? " : "Already have an account? "}
-          <button
-            type="button"
-            onClick={() => setIsLogin(!isLogin)}
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            {isLogin ? t('signUp') : t('signIn')}
-          </button>
-        </p>
-      </CardContent>
-    </Card>
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            {isLogin ? "Don't have an account? " : "Already have an account? "}
+            <button
+              type="button"
+              onClick={() => setIsLogin(!isLogin)}
+              className="font-semibold text-primary underline-offset-4 hover:underline transition-colors"
+            >
+              {isLogin ? "Sign up" : "Sign in"}
+            </button>
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

@@ -2,68 +2,72 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Droplets, Sprout, Bug, Calendar, Plus, Zap } from "lucide-react"
+import { Droplet, FileText, Calendar, Heart, Plus } from "lucide-react"
 import { toast } from "sonner"
+import Link from "next/link"
 
 export function QuickActions() {
     const actions = [
         {
-            label: "Irrigate Now",
-            description: "Start 15min cycle",
-            icon: <Droplets className="h-5 w-5" />,
-            color: "bg-blue-500",
-            onClick: () => toast.success("Manual irrigation cycle started. (Demo Mode)")
-        },
-        {
-            label: "Add Fertilizer",
-            description: "Log feeding event",
-            icon: <Zap className="h-5 w-5" />,
-            color: "bg-yellow-500",
-            onClick: () => toast.success("Fertilizer application logged successfully.")
-        },
-        {
-            label: "Pest Check",
-            description: "Mark weekly check",
-            icon: <Bug className="h-5 w-5" />,
-            color: "bg-orange-500",
-            onClick: () => toast.success("Pest inspection task marked as complete.")
-        },
-        {
-            label: "Schedule",
-            description: "Manage tasks",
+            label: "Book Doctor",
+            description: "Schedule appointment",
             icon: <Calendar className="h-5 w-5" />,
-            color: "bg-green-500",
-            onClick: () => toast.info("Task scheduler opened. (Demo Mode)")
+            color: "text-primary",
+            href: "/dashboard/appointments",
+            onClick: null
+        },
+        {
+            label: "Upload Labs",
+            description: "Add test results",
+            icon: <Droplet className="h-5 w-5" />,
+            color: "text-blue-500",
+            href: "/dashboard/data-collection",
+            onClick: null
+        },
+        {
+            label: "View Reports",
+            description: "Health analysis",
+            icon: <FileText className="h-5 w-5" />,
+            color: "text-green-500",
+            href: "/dashboard/analytics",
+            onClick: () => toast.info("Analytics dashboard opened")
+        },
+        {
+            label: "Health Profile",
+            description: "Update info",
+            icon: <Heart className="h-5 w-5" />,
+            color: "text-red-500",
+            href: "/dashboard/data-collection",
+            onClick: null
         }
     ]
 
     return (
-        <Card className="border-none bg-card/60 backdrop-blur-xl shadow-xl rounded-3xl overflow-hidden mt-6">
-            <CardHeader className="pb-4">
-                <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+        <Card className="border border-border/40 bg-card/80 backdrop-blur shadow-lg rounded-2xl overflow-hidden">
+            <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                     <Plus className="h-4 w-4 text-primary" />
-                    Quick Farm Actions
+                    Quick Actions
                 </CardTitle>
             </CardHeader>
-            <CardContent className="p-6 pt-0">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <CardContent className="p-4 pt-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     {actions.map((action, i) => (
-                        <Button
-                            key={i}
-                            variant="ghost"
-                            onClick={action.onClick}
-                            className="h-auto p-4 flex flex-col items-start gap-3 rounded-2xl bg-background/40 border border-primary/10 transition-all hover:bg-primary/5 hover:border-primary/30 hover:translate-y-[-2px] group"
-                        >
-                            <div className={`p-2 rounded-xl ${action.color}/20 text-white shadow-inner group-hover:scale-110 transition-transform`}>
-                                <div className={`${action.color} p-2 rounded-lg shadow-lg`}>
+                        <Link href={action.href} key={i}>
+                            <Button
+                                variant="ghost"
+                                onClick={action.onClick}
+                                className="w-full h-auto p-4 flex flex-col items-start gap-2 rounded-xl bg-muted/30 border border-border/50 transition-all hover:bg-muted hover:border-primary/30 hover:shadow-md active:scale-95"
+                            >
+                                <div className={`${action.color}`}>
                                     {action.icon}
                                 </div>
-                            </div>
-                            <div className="text-left">
-                                <p className="text-sm font-bold tracking-tight">{action.label}</p>
-                                <p className="text-[10px] font-medium text-muted-foreground">{action.description}</p>
-                            </div>
-                        </Button>
+                                <div className="text-left w-full">
+                                    <p className="text-sm font-semibold">{action.label}</p>
+                                    <p className="text-xs text-muted-foreground">{action.description}</p>
+                                </div>
+                            </Button>
+                        </Link>
                     ))}
                 </div>
             </CardContent>
