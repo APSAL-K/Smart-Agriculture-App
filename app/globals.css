@@ -4,17 +4,17 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Premium Healthcare Theme - Medical Blue & Healing Green */
+  /* Deep Magenta Healthcare Theme - Rich Purple Primary */
   --background: oklch(0.98 0.001 200);
   --foreground: oklch(0.15 0.01 200);
   --card: oklch(0.99 0.001 200);
   --card-foreground: oklch(0.15 0.01 200);
   --popover: oklch(0.99 0.001 200);
   --popover-foreground: oklch(0.15 0.01 200);
-  /* Medical Blue Primary */
-  --primary: oklch(0.38 0.18 250);
+  /* Deep Magenta Primary (#371523) */
+  --primary: oklch(0.28 0.15 335);
   --primary-foreground: oklch(0.98 0.001 200);
-  /* Healing Green Secondary */
+  /* Complementary Teal Secondary */
   --secondary: oklch(0.55 0.16 160);
   --secondary-foreground: oklch(0.98 0.001 200);
   --muted: oklch(0.94 0.01 200);
@@ -27,21 +27,21 @@
   --destructive-foreground: oklch(0.98 0.001 200);
   --border: oklch(0.91 0.01 200);
   --input: oklch(0.91 0.01 200);
-  --ring: oklch(0.38 0.18 250);
+  --ring: oklch(0.28 0.15 335);
   /* Chart colors for health metrics */
-  --chart-1: oklch(0.38 0.18 250);
+  --chart-1: oklch(0.28 0.15 335);
   --chart-2: oklch(0.55 0.16 160);
   --chart-3: oklch(0.72 0.2 40);
   --chart-4: oklch(0.63 0.27 30);
   --chart-5: oklch(0.5 0.15 270);
   --radius: 0.75rem;
-  --sidebar: oklch(0.38 0.18 250);
+  --sidebar: oklch(0.28 0.15 335);
   --sidebar-foreground: oklch(0.98 0.001 200);
   --sidebar-primary: oklch(0.55 0.16 160);
   --sidebar-primary-foreground: oklch(0.98 0.001 200);
   --sidebar-accent: oklch(0.72 0.2 40);
   --sidebar-accent-foreground: oklch(0.15 0.01 200);
-  --sidebar-border: oklch(0.45 0.15 250);
+  --sidebar-border: oklch(0.45 0.15 335);
   --sidebar-ring: oklch(0.55 0.16 160);
   --warning: oklch(0.72 0.2 40);
   --warning-foreground: oklch(0.15 0.01 200);
@@ -56,7 +56,8 @@
   --card-foreground: oklch(0.96 0.01 200);
   --popover: oklch(0.18 0.015 250);
   --popover-foreground: oklch(0.96 0.01 200);
-  --primary: oklch(0.52 0.22 250);
+  /* Deep Magenta Primary - lighter variant for dark mode */
+  --primary: oklch(0.48 0.18 335);
   --primary-foreground: oklch(0.98 0.001 200);
   --secondary: oklch(0.62 0.18 160);
   --secondary-foreground: oklch(0.12 0.01 250);
@@ -68,15 +69,15 @@
   --destructive-foreground: oklch(0.98 0.001 200);
   --border: oklch(0.28 0.02 200);
   --input: oklch(0.28 0.02 200);
-  --ring: oklch(0.52 0.22 250);
-  --chart-1: oklch(0.52 0.22 250);
+  --ring: oklch(0.48 0.18 335);
+  --chart-1: oklch(0.48 0.18 335);
   --chart-2: oklch(0.62 0.18 160);
   --chart-3: oklch(0.78 0.22 40);
   --chart-4: oklch(0.72 0.3 30);
   --chart-5: oklch(0.6 0.18 270);
   --sidebar: oklch(0.15 0.015 250);
   --sidebar-foreground: oklch(0.96 0.01 200);
-  --sidebar-primary: oklch(0.52 0.22 250);
+  --sidebar-primary: oklch(0.48 0.18 335);
   --sidebar-primary-foreground: oklch(0.98 0.001 200);
   --sidebar-accent: oklch(0.78 0.22 40);
   --sidebar-accent-foreground: oklch(0.96 0.01 200);
