@@ -29,8 +29,8 @@ export function QuickActions() {
             description: "Health analysis",
             icon: <FileText className="h-5 w-5" />,
             color: "text-green-500",
-            href: "/dashboard/analytics",
-            onClick: () => toast.info("Analytics dashboard opened")
+            href: "/dashboard/recommendations",
+            onClick: null
         },
         {
             label: "Health Profile",

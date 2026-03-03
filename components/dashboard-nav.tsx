@@ -59,43 +59,25 @@ export function DashboardNav() {
             href="/dashboard"
             className={`text-sm font-medium transition-colors hover:text-primary ${!user?.patientProfile?.isOnboardingComplete ? 'opacity-50 pointer-events-none' : ''}`}
           >
-            {t('dashboard')}
+            Dashboard
           </Link>
           <Link
             href="/dashboard/data-collection"
             className="text-sm font-medium hover:text-primary transition-colors"
           >
-            {t('dataCollection')}
+            Health Profile
+          </Link>
+          <Link
+            href="/dashboard/appointments"
+            className="text-sm font-medium hover:text-primary transition-colors"
+          >
+            Appointments
           </Link>
           <Link
             href="/dashboard/recommendations"
-            className={`text-sm font-medium transition-colors hover:text-primary ${!user?.farmInfo?.isOnboardingComplete ? 'opacity-50 pointer-events-none' : ''}`}
+            className={`text-sm font-medium transition-colors hover:text-primary ${!user?.patientProfile?.isOnboardingComplete ? 'opacity-50 pointer-events-none' : ''}`}
           >
-            {t('recommendations')}
-          </Link>
-          <Link
-            href="/dashboard/profile"
-            className="text-sm font-medium hover:text-primary transition-colors"
-          >
-            {t('profile')}
-          </Link>
-          <Link
-            href="/dashboard/weather"
-            className="text-sm font-medium hover:text-primary transition-colors"
-          >
-            {t('weather')}
-          </Link>
-          <Link
-            href="/dashboard/community"
-            className="text-sm font-medium hover:text-primary transition-colors"
-          >
-            {t('community')}
-          </Link>
-          <Link
-            href="/dashboard/market-prices"
-            className="text-sm font-medium hover:text-primary transition-colors"
-          >
-            {t('marketPrices')}
+            Health Insights
           </Link>
         </nav>
 
