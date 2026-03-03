@@ -26,6 +26,9 @@ import {
 } from "lucide-react"
 import { HealthMetricsChart } from "@/components/health-metrics-chart"
 import { RiskFactorsChart } from "@/components/risk-factors-chart"
+import { LiverEnzymesChart } from "@/components/liver-enzymes-chart"
+import { LifestyleHabitsChart } from "@/components/lifestyle-habits-chart"
+import { HealthMetricsPanel } from "@/components/health-metrics-panel"
 
 export default function DashboardHome() {
   const { user, loading } = useAuth()
@@ -116,6 +119,15 @@ export default function DashboardHome() {
         <HealthMetricsChart />
         <RiskFactorsChart />
       </div>
+
+      {/* Additional Health Data Charts */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <LiverEnzymesChart />
+        <LifestyleHabitsChart />
+      </div>
+
+      {/* Health Metrics Panel */}
+      <HealthMetricsPanel />
 
       {/* Risk Assessment Card */}
       <Card

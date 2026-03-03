@@ -39,7 +39,7 @@ export default function AppointmentPaymentPage({
   const router = useRouter()
   const searchParams = useSearchParams()
   const dispatch = useDispatch()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const appointments = useSelector(
     (state: RootState) => state.appointments.appointments
   )
@@ -49,8 +49,27 @@ export default function AppointmentPaymentPage({
   const [expiryDate, setExpiryDate] = useState("12/25")
   const [cvc, setCvc] = useState("123")
   const [zipCode, setZipCode] = useState("10001")
+  const [mounted, setMounted] = useState(false)
 
   const appointment = appointments.find((apt) => apt.id === params.appointmentId)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!authLoading && !user && mounted) {
+      router.push("/login")
+    }
+  }, [authLoading, user, router, mounted])
+
+  // Check if appointment exists after hydration
+  useEffect(() => {
+    if (mounted && !appointment && appointments.length > 0) {
+      console.log("[v0] Appointment not found:", params.appointmentId)
+      console.log("[v0] Available appointments:", appointments)
+    }
+  }, [appointment, appointments, params.appointmentId, mounted])
 
   useEffect(() => {
     // Check if payment was successful
@@ -132,6 +151,32 @@ export default function AppointmentPaymentPage({
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {!mounted || authLoading ? (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 text-primary mx-auto animate-spin mb-4" />
+            <p className="text-muted-foreground">Loading payment details...</p>
+          </div>
+        </div>
+      ) : !appointment ? (
+        <Card className="border-red-200 bg-red-50/30">
+          <CardHeader>
+            <CardTitle className="text-red-700">Appointment Not Found</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-red-600 mb-4">
+              The appointment could not be found. Please go back and try booking again.
+            </p>
+            <Link href="/dashboard/appointments">
+              <Button>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Appointments
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
       {/* Header */}
       <div>
         <Link href="/dashboard/appointments">
@@ -322,6 +367,8 @@ export default function AppointmentPaymentPage({
           </CardContent>
         </Card>
       </div>
+        </>
+      )}
     </div>
   )
 }
