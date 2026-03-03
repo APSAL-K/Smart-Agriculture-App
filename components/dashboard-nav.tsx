@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Leaf, LogOut, User, Settings, UserCircle, Database, Lightbulb, Users, TrendingUp, Heart } from "lucide-react"
+import { LogOut, User, Settings, UserCircle, Database, Lightbulb, Users, TrendingUp, Heart, Calendar, FileText } from "lucide-react"
 import { toast } from "sonner"
 import { useTranslation } from "@/lib/use-translation"
 
@@ -146,33 +146,33 @@ export function DashboardNav() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard/profile" className="flex items-center w-full cursor-pointer">
-                    <UserCircle className="mr-2 h-4 w-4" />
-                    {t('profile')}
+                  <Link href="/dashboard/appointments" className="flex items-center w-full cursor-pointer">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    Book Doctor
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard/weather" className="flex items-center w-full cursor-pointer">
-                    <CloudRain className="mr-2 h-4 w-4" />
-                    {t('weather')}
+                  <Link href="/dashboard/data-collection" className="flex items-center w-full cursor-pointer">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Update Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/profile" className="flex items-center w-full cursor-pointer">
+                    <UserCircle className="mr-2 h-4 w-4" />
+                    My Profile
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/community" className="flex items-center w-full cursor-pointer">
                     <Users className="mr-2 h-4 w-4" />
-                    {t('community')}
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/market-prices" className="flex items-center w-full cursor-pointer">
-                    <TrendingUp className="mr-2 h-4 w-4" />
-                    {t('marketPrices')}
+                    Community
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/settings" className="flex items-center w-full cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
-                    {t('settings')}
+                    Settings
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

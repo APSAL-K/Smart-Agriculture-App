@@ -1,10 +1,8 @@
-"use client"
-
 import { useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { DashboardNav } from "@/components/dashboard-nav"
-import { Leaf, Info } from "lucide-react"
+import { Heart, Info } from "lucide-react"
 
 export default function DashboardLayout({
   children,
@@ -15,7 +13,7 @@ export default function DashboardLayout({
   const router = useRouter()
   const pathname = usePathname()
 
-  const isOnboardingComplete = user?.farmInfo?.isOnboardingComplete
+  const isOnboardingComplete = user?.patientProfile?.isOnboardingComplete
 
   useEffect(() => {
     if (!loading && !isOnboardingComplete) {
@@ -29,9 +27,9 @@ export default function DashboardLayout({
     return (
       <div className="flex min-h-svh items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <Leaf className="h-10 w-10 animate-pulse text-primary" />
+          <Heart className="h-10 w-10 animate-pulse text-primary" />
           <p className="text-sm text-muted-foreground">
-            Loading your farm data...
+            Loading your health data...
           </p>
         </div>
       </div>
@@ -45,7 +43,7 @@ export default function DashboardLayout({
         <div className="bg-primary/10 border-b border-primary/20 px-4 py-3 flex items-center justify-center gap-3">
           <Info className="h-4 w-4 text-primary" />
           <p className="text-sm font-medium text-primary">
-            Onboarding Required: Please complete your farm information to unlock the dashboard.
+            Onboarding Required: Please complete your health profile to unlock the dashboard.
           </p>
         </div>
       )}
