@@ -13,6 +13,14 @@ export function setSensorReadings(readings: HealthReading[]) {
   mutate(SENSOR_KEY, readings, { revalidate: false })
 }
 
+export function setAlerts(alerts: Alert[]) {
+  mutate(ALERTS_KEY, alerts, { revalidate: false })
+}
+
+export function setIsDemo(isDemo: boolean) {
+  mutate(DEMO_KEY, isDemo, { revalidate: false })
+}
+
 export function useSensorReadings() {
   const { data } = useSWR<HealthReading[]>(SENSOR_KEY, null, {
     fallbackData: [],
