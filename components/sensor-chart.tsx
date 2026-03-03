@@ -19,13 +19,13 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useTranslation } from "@/lib/use-translation"
-import type { SensorReading } from "@/lib/types"
+import type { HealthReading } from "@/lib/types"
 
 interface SensorChartProps {
-  readings: SensorReading[]
+  readings: HealthReading[]
 }
 
-type MetricKey = "soilMoisture" | "temperature" | "humidity"
+type MetricKey = "bilirubin" | "alt" | "ast" | "albumin"
 
 const metrics: {
   key: MetricKey
@@ -35,40 +35,48 @@ const metrics: {
   unit: string
 }[] = [
     {
-      key: "soilMoisture",
-      label: "Soil Moisture",
-      shortLabel: "Moisture",
+      key: "bilirubin",
+      label: "Bilirubin",
+      shortLabel: "Bili",
       color: "var(--color-chart-1)",
-      unit: "%",
+      unit: " mg/dL",
     },
     {
-      key: "temperature",
-      label: "Temperature",
-      shortLabel: "Temp",
-      color: "var(--color-chart-5)",
-      unit: "\u00B0C",
+      key: "alt",
+      label: "ALT Enzyme",
+      shortLabel: "ALT",
+      color: "var(--color-chart-2)",
+      unit: " U/L",
     },
     {
-      key: "humidity",
-      label: "Humidity",
-      shortLabel: "Humidity",
+      key: "ast",
+      label: "AST Enzyme",
+      shortLabel: "AST",
+      color: "var(--color-chart-3)",
+      unit: " U/L",
+    },
+    {
+      key: "albumin",
+      label: "Albumin",
+      shortLabel: "Alb",
       color: "var(--color-chart-4)",
-      unit: "%",
+      unit: " g/dL",
     },
   ]
 
 export function SensorChart({ readings }: SensorChartProps) {
   const { t } = useTranslation()
-  const [activeMetric, setActiveMetric] = useState<MetricKey>("soilMoisture")
+  const [activeMetric, setActiveMetric] = useState<MetricKey>("bilirubin")
 
   const chartData = readings.map((r) => ({
     time: new Date(r.timestamp).toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
     }),
-    soilMoisture: Number(r.soilMoisture.toFixed(1)),
-    temperature: Number(r.temperature.toFixed(1)),
-    humidity: Number(r.humidity.toFixed(1)),
+    bilirubin: Number(r.metrics.bilirubin.toFixed(2)),
+    alt: Number(r.metrics.alt.toFixed(0)),
+    ast: Number(r.metrics.ast.toFixed(0)),
+    albumin: Number(r.metrics.albumin.toFixed(2)),
   }))
 
   const active = metrics.find((m) => m.key === activeMetric)!
@@ -79,10 +87,10 @@ export function SensorChart({ readings }: SensorChartProps) {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle className="font-serif text-base sm:text-lg">
-              {t('sensorTrends')}
+              Health Metrics Trends
             </CardTitle>
             <CardDescription className="text-xs sm:text-sm">
-              Last 24 hours of readings
+              Last 24 hours of lab readings
             </CardDescription>
           </div>
           <div className="flex gap-1 rounded-lg bg-muted p-1">
@@ -95,10 +103,10 @@ export function SensorChart({ readings }: SensorChartProps) {
                 onClick={() => setActiveMetric(metric.key)}
               >
                 <span className="sm:hidden">
-                  {metric.key === 'soilMoisture' ? t('moisture') : metric.key === 'temperature' ? t('temp') : t('humidity')}
+                  {metric.shortLabel}
                 </span>
                 <span className="hidden sm:inline">
-                  {metric.key === 'soilMoisture' ? t('soilMoisture') : metric.key === 'temperature' ? t('temperature') : t('humidity')}
+                  {metric.label}
                 </span>
               </Button>
             ))}

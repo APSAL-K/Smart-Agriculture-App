@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Leaf, LogOut, User, Settings, UserCircle, Database, Lightbulb, Users, TrendingUp, CloudRain } from "lucide-react"
+import { Leaf, LogOut, User, Settings, UserCircle, Database, Lightbulb, Users, TrendingUp, Heart } from "lucide-react"
 import { toast } from "sonner"
 import { useTranslation } from "@/lib/use-translation"
 
@@ -46,10 +46,10 @@ export function DashboardNav() {
         {/* Logo */}
         <Link href="/dashboard" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <Leaf className="h-4 w-4 text-primary-foreground" />
+            <Heart className="h-4 w-4 text-primary-foreground" />
           </div>
           <span className="font-serif text-lg font-bold tracking-tight text-foreground">
-            {t('appName')}
+            LiverCare AI
           </span>
         </Link>
 
@@ -57,7 +57,7 @@ export function DashboardNav() {
         <nav className="hidden md:flex items-center gap-6 mx-6">
           <Link
             href="/dashboard"
-            className={`text-sm font-medium transition-colors hover:text-primary ${!user?.farmInfo?.isOnboardingComplete ? 'opacity-50 pointer-events-none' : ''}`}
+            className={`text-sm font-medium transition-colors hover:text-primary ${!user?.patientProfile?.isOnboardingComplete ? 'opacity-50 pointer-events-none' : ''}`}
           >
             {t('dashboard')}
           </Link>

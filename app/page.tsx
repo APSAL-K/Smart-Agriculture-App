@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { AuthForm } from "@/components/auth-form"
 import { useTranslation } from "@/lib/use-translation"
-import { Leaf, BarChart3, Droplets, Thermometer } from "lucide-react"
+import { Heart, BarChart3, Droplet, AlertCircle } from "lucide-react"
 
 export default function HomePage() {
   const { t } = useTranslation()
@@ -22,7 +22,7 @@ export default function HomePage() {
     return (
       <div className="flex min-h-svh items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <Leaf className="h-10 w-10 animate-pulse text-primary" />
+          <Heart className="h-10 w-10 animate-pulse text-primary" />
           <p className="text-sm text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -36,45 +36,44 @@ export default function HomePage() {
         {/* Logo */}
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-foreground/20">
-            <Leaf className="h-5 w-5 text-primary-foreground" />
+            <Heart className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="font-serif text-xl font-bold tracking-tight text-primary-foreground">
-            {t('appName')}
+            LiverCare AI
           </span>
         </div>
 
         {/* Hero content */}
         <div className="my-10 lg:my-0">
           <h1 className="text-balance font-serif text-3xl font-bold leading-tight text-primary-foreground sm:text-4xl lg:text-5xl">
-            Smart farming starts with smarter data
+            Early liver disease detection, powered by AI
           </h1>
           <p className="mt-4 max-w-lg text-pretty text-sm leading-relaxed text-primary-foreground/80 sm:text-base">
-            Monitor your soil, predict irrigation needs, and protect your crops
-            with real-time sensor data and intelligent recommendations.
+            Monitor your liver health with comprehensive lab test analysis and get AI-powered insights for early intervention and better healthcare outcomes.
           </p>
 
           {/* Feature cards */}
           <div className="mt-8 grid grid-cols-3 gap-3 sm:gap-4 lg:mt-10">
             <FeatureCard
-              icon={<Droplets className="h-5 w-5" />}
-              title={t('soilMoisture')}
-              description="Real-time monitoring"
-            />
-            <FeatureCard
-              icon={<Thermometer className="h-5 w-5" />}
-              title={t('temperature')}
-              description="24/7 tracking"
+              icon={<Droplet className="h-5 w-5" />}
+              title="Test Analysis"
+              description="Lab result tracking"
             />
             <FeatureCard
               icon={<BarChart3 className="h-5 w-5" />}
-              title={t('analytics')}
-              description="Smart insights"
+              title="Analytics"
+              description="Health trends"
+            />
+            <FeatureCard
+              icon={<AlertCircle className="h-5 w-5" />}
+              title="Alerts"
+              description="Real-time warnings"
             />
           </div>
         </div>
 
         <p className="hidden text-sm text-primary-foreground/60 lg:block">
-          Trusted by over 2,000 farms worldwide
+          Trusted by healthcare providers for liver disease prediction
         </p>
       </div>
 
@@ -86,6 +85,7 @@ export default function HomePage() {
       </div>
     </div>
   )
+}
 }
 
 function FeatureCard({

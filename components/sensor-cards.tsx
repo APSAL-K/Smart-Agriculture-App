@@ -2,26 +2,28 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Droplets, Thermometer, Wind, Gauge } from "lucide-react"
-import type { SensorReading } from "@/lib/types"
+import { Droplet, Activity, AlertTriangle, Gauge } from "lucide-react"
+import type { HealthReading } from "@/lib/types"
 import { useTranslation } from "@/lib/use-translation"
 import { cn } from "@/lib/utils"
 
-interface SensorCardProps {
+interface HealthMetricCardProps {
   title: string
   value: string
   icon: React.ReactNode
   status: { label: string; color: string }
   progress: number
   description: string
+  unit?: string
+  normalRange?: string
   trend?: { value: string; positive: boolean }
 }
 
-interface SensorCardsProps {
-  latestReading: SensorReading | null
+interface HealthCardsProps {
+  latestReading: HealthReading | null
 }
 
-export function SensorCards({ latestReading }: SensorCardsProps) {
+export function SensorCards({ latestReading }: HealthCardsProps) {
   const { t } = useTranslation()
   if (!latestReading) {
     return (
@@ -33,91 +35,103 @@ export function SensorCards({ latestReading }: SensorCardsProps) {
     )
   }
 
-  const { soilMoisture, temperature, humidity } = latestReading
+  const { metrics } = latestReading
+  const { bilirubin, alt, ast, albumin } = metrics
 
-  const moistureStatus =
-    soilMoisture < 15
-      ? { label: "Critical", color: "text-destructive" }
-      : soilMoisture < 30
-        ? { label: "Low", color: "text-orange-500" }
-        : soilMoisture > 80
-          ? { label: "Saturated", color: "text-blue-500" }
-          : { label: "Optimal", color: "text-green-500" }
-
-  const temperatureStatus =
-    temperature > 38
-      ? { label: "Extreme", color: "text-destructive" }
-      : temperature > 32
-        ? { label: "High", color: "text-orange-500" }
-        : temperature < 5
-          ? { label: "Cold", color: "text-blue-400" }
-          : { label: "Normal", color: "text-green-500" }
-
-  const humidityStatus =
-    humidity < 25
-      ? { label: "Dry", color: "text-orange-400" }
-      : humidity > 85
-        ? { label: "High", color: "text-blue-400" }
+  const bilirubinStatus =
+    bilirubin > 1.5
+      ? { label: "High", color: "text-destructive" }
+      : bilirubin > 1.2
+        ? { label: "Elevated", color: "text-orange-500" }
         : { label: "Normal", color: "text-green-500" }
 
-  const health =
-    soilMoisture >= 30 && soilMoisture <= 80 && temperature <= 35 && humidity >= 30
+  const altStatus =
+    alt > 80
+      ? { label: "Critical", color: "text-destructive" }
+      : alt > 40
+        ? { label: "High", color: "text-orange-500" }
+        : { label: "Normal", color: "text-green-500" }
+
+  const astStatus =
+    ast > 80
+      ? { label: "Critical", color: "text-destructive" }
+      : ast > 40
+        ? { label: "High", color: "text-orange-500" }
+        : { label: "Normal", color: "text-green-500" }
+
+  const albuminStatus =
+    albumin < 3.0
+      ? { label: "Critical", color: "text-destructive" }
+      : albumin < 3.5
+        ? { label: "Low", color: "text-orange-500" }
+        : { label: "Normal", color: "text-green-500" }
+
+  const overallHealth =
+    bilirubinStatus.label === "Normal" &&
+    altStatus.label === "Normal" &&
+    astStatus.label === "Normal" &&
+    albuminStatus.label === "Normal"
       ? { value: 85, label: "Good", color: "text-green-500" }
-      : soilMoisture < 15 || temperature > 38
-        ? { value: 30, label: "Poor", color: "text-destructive" }
+      : bilirubinStatus.label === "Critical" || altStatus.label === "Critical"
+        ? { value: 30, label: "Alert", color: "text-destructive" }
         : { value: 60, label: "Fair", color: "text-orange-500" }
 
   return (
     <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-      <SensorCard
-        title={t('soilMoisture')}
-        value={`${soilMoisture.toFixed(1)}%`}
-        icon={<Droplets className="h-5 w-5" />}
-        status={moistureStatus}
-        progress={soilMoisture}
-        description="Hydro-Saturation"
-        trend={{ value: "+2.4%", positive: true }}
+      <HealthMetricCard
+        title="Bilirubin"
+        value={`${bilirubin.toFixed(2)}`}
+        unit="mg/dL"
+        icon={<Droplet className="h-5 w-5" />}
+        status={bilirubinStatus}
+        progress={Math.min((bilirubin / 2) * 100, 100)}
+        description="Bile Pigment Level"
+        normalRange="< 1.2"
       />
-      <SensorCard
-        title={t('temperature')}
-        value={`${temperature.toFixed(1)}\u00B0C`}
-        icon={<Thermometer className="h-5 w-5" />}
-        status={temperatureStatus}
-        progress={(temperature / 50) * 100}
-        description="Thermal Environment"
-        trend={{ value: "-0.5°", positive: true }}
+      <HealthMetricCard
+        title="ALT (SGPT)"
+        value={`${alt.toFixed(0)}`}
+        unit="Units/L"
+        icon={<Activity className="h-5 w-5" />}
+        status={altStatus}
+        progress={Math.min((alt / 100) * 100, 100)}
+        description="Liver Enzyme Activity"
+        normalRange="< 40"
       />
-      <SensorCard
-        title={t('humidity')}
-        value={`${humidity.toFixed(1)}%`}
-        icon={<Wind className="h-5 w-5" />}
-        status={humidityStatus}
-        progress={humidity}
-        description="Atmospheric Vapor"
-        trend={{ value: "+1.2%", positive: false }}
+      <HealthMetricCard
+        title="AST (SGOT)"
+        value={`${ast.toFixed(0)}`}
+        unit="Units/L"
+        icon={<AlertTriangle className="h-5 w-5" />}
+        status={astStatus}
+        progress={Math.min((ast / 100) * 100, 100)}
+        description="Liver Damage Marker"
+        normalRange="< 40"
       />
-      <SensorCard
-        title="Crop Health"
-        value={`${health.value}%`}
+      <HealthMetricCard
+        title="Health Score"
+        value={`${overallHealth.value}`}
+        unit="%"
         icon={<Gauge className="h-5 w-5" />}
-        status={health}
-        progress={health.value}
-        description="Viability Index"
-        trend={{ value: "Stable", positive: true }}
+        status={overallHealth}
+        progress={overallHealth.value}
+        description="Overall Assessment"
       />
     </div>
   )
 }
 
-function SensorCard({
+function HealthMetricCard({
   title,
   value,
+  unit,
   icon,
   status,
   progress,
   description,
+  normalRange,
   trend
-}: SensorCardProps) {
+}: HealthMetricCardProps) {
   return (
     <Card className="group relative overflow-hidden border-none bg-card/40 backdrop-blur-xl shadow-lg transition-all hover:shadow-2xl hover:translate-y-[-4px] rounded-3xl">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -140,6 +154,11 @@ function SensorCard({
             <span className="text-2xl font-black tracking-tighter text-foreground sm:text-3xl">
               {value}
             </span>
+            {unit && (
+              <span className="text-[9px] font-bold text-muted-foreground/70 mt-0.5">
+                {unit}
+              </span>
+            )}
             <div className="flex items-center gap-1.5 mt-1">
               <span className={cn("text-[10px] font-black px-1.5 py-0.5 rounded-md uppercase",
                 status.color.replace('text-', 'bg-').replace('500', '500/10'),
@@ -158,7 +177,7 @@ function SensorCard({
 
         <div className="mt-4 space-y-1">
           <div className="flex justify-between text-[9px] font-bold text-muted-foreground uppercase tracking-tighter">
-            <span>Range</span>
+            <span>{normalRange || "Range"}</span>
             <span>{Math.round(progress)}%</span>
           </div>
           <Progress

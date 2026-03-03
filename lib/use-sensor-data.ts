@@ -4,13 +4,13 @@ import { useEffect, useState, useCallback } from "react"
 import { ref, onValue, push, query, orderByChild, limitToLast } from "firebase/database"
 import { database } from "@/lib/firebase"
 import { setSensorReadings, setAlerts, setIsDemo } from "@/lib/store"
-import type { SensorReading, Alert, FarmInfo } from "@/lib/types"
-import { generateDemoData, generateLiveReading } from "./modules/data-collection"
+import type { HealthReading, Alert, PatientProfile } from "@/lib/types"
+import { generateDemoHealthData, generateLiveHealthReading } from "./modules/data-collection"
 import { generateAlerts } from "./modules/alert-system"
 import { toast } from "sonner"
 
-export function useSensorData(userId: string | undefined, farmInfo?: FarmInfo) {
-  const [readings, setReadings] = useState<SensorReading[]>([])
+export function useSensorData(userId: string | undefined, patientProfile?: PatientProfile) {
+  const [readings, setReadings] = useState<HealthReading[]>([])
   const [alerts, _setAlerts] = useState<Alert[]>([])
   const [loading, setLoading] = useState(true)
   const [isDemo, _setIsDemo] = useState(false)
@@ -18,13 +18,13 @@ export function useSensorData(userId: string | undefined, farmInfo?: FarmInfo) {
   // Track seen IDs to prevent duplicate toasts
   const [seenAlertIds, setSeenAlertIds] = useState<Set<string>>(new Set())
 
-  const processAlerts = useCallback((newReadings: SensorReading[], info?: FarmInfo) => {
-    const generatedAlerts = generateAlerts(newReadings, info)
+  const processAlerts = useCallback((newReadings: HealthReading[]) => {
+    const generatedAlerts = generateAlerts(newReadings)
 
-    // Check for new critical alerts to "push"
+    // Check for new critical alerts to push
     generatedAlerts.forEach(alert => {
       if (alert.severity === 'critical' && !seenAlertIds.has(alert.id)) {
-        toast.error(`CRITICAL ALERT: ${alert.message}`, {
+        toast.error(`HEALTH ALERT: ${alert.message}`, {
           duration: 10000,
           position: "top-right"
         })
@@ -37,8 +37,8 @@ export function useSensorData(userId: string | undefined, farmInfo?: FarmInfo) {
 
   useEffect(() => {
     if (!userId || !database) {
-      const demoData = generateDemoData()
-      const demoAlerts = processAlerts(demoData, farmInfo)
+      const demoData = generateDemoHealthData()
+      const demoAlerts = processAlerts(demoData)
       setReadings(demoData)
       _setAlerts(demoAlerts)
       _setIsDemo(true)
@@ -52,18 +52,18 @@ export function useSensorData(userId: string | undefined, farmInfo?: FarmInfo) {
     }
 
     const readingsRef = query(
-      ref(database, `sensorData/${userId}`),
+      ref(database, `healthData/${userId}`),
       orderByChild("timestamp"),
       limitToLast(24)
     )
 
     const unsubscribe = onValue(readingsRef, (snapshot) => {
-      const data: SensorReading[] = []
+      const data: HealthReading[] = []
       snapshot.forEach((child) => {
         data.push({ id: child.key!, ...child.val() })
       })
       data.sort((a, b) => a.timestamp - b.timestamp)
-      const newAlerts = processAlerts(data, farmInfo)
+      const newAlerts = processAlerts(data)
 
       setReadings(data)
       _setAlerts(newAlerts)
@@ -75,12 +75,12 @@ export function useSensorData(userId: string | undefined, farmInfo?: FarmInfo) {
     })
 
     return () => unsubscribe()
-  }, [userId, farmInfo, processAlerts])
+  }, [userId, processAlerts])
 
   const addReading = useCallback(
-    async (reading: Omit<SensorReading, "id" | "timestamp">) => {
+    async (reading: Omit<HealthReading, "id" | "timestamp">) => {
       if (!userId || !database) return
-      const readingsRef = ref(database, `sensorData/${userId}`)
+      const readingsRef = ref(database, `healthData/${userId}`)
       await push(readingsRef, {
         ...reading,
         timestamp: Date.now(),
@@ -94,12 +94,12 @@ export function useSensorData(userId: string | undefined, farmInfo?: FarmInfo) {
     if (!isDemo) return
     const interval = setInterval(() => {
       setReadings((prev) => {
-        const newReading = generateLiveReading()
+        const newReading = generateLiveHealthReading()
         const updated = [...prev.slice(1), newReading]
         const newAlerts = generateAlerts(updated)
         _setAlerts(newAlerts)
 
-        // Push into SWR cache
+        // Push into store
         setSensorReadings(updated)
         setAlerts(newAlerts)
 
@@ -109,7 +109,5 @@ export function useSensorData(userId: string | undefined, farmInfo?: FarmInfo) {
     return () => clearInterval(interval)
   }, [isDemo])
 
-  const latestWeather = readings[readings.length - 1]?.weather
-
-  return { readings, alerts, loading, addReading, isDemo, latestWeather }
+  return { readings, alerts, loading, addReading, isDemo, latestWeather: null }
 }

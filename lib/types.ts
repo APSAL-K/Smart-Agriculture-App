@@ -1,50 +1,52 @@
-export interface WeatherData {
-  temp: number
-  humidity: number
-  condition: string
-  windSpeed: number
+// Health Data for Liver Disease Prediction
+export interface HealthMetrics {
+  bilirubin: number // mg/dL
+  alt: number // ALT/SGPT (Units/L)
+  ast: number // AST/SGOT (Units/L)
+  albumin: number // g/dL
+  inr: number // INR ratio
+  platelets: number // 10^9/L
+  triglycerides: number // mg/dL
+  glucose: number // mg/dL
+  creatinine?: number // mg/dL
+  alkalinePhosphatase?: number // Units/L
 }
 
-export interface SensorReading {
+export interface HealthReading {
   id: string
-  soilMoisture: number
-  temperature: number
-  humidity: number
+  metrics: HealthMetrics
   timestamp: number
-  deviceId: string
-  weather?: WeatherData
+  labName?: string
+  testId?: string
 }
 
 export interface Alert {
   id: string
-  type: "low_moisture" | "high_temperature" | "low_humidity" | "high_humidity"
+  type: "high_bilirubin" | "high_enzymes" | "low_platelets" | "abnormal_inr" | "high_glucose" | "abnormal_albumin"
   message: string
   severity: "warning" | "critical" | "info"
   timestamp: number
   acknowledged: boolean
-  sensorReading: SensorReading
+  healthReading: HealthReading
 }
 
-export interface IrrigationRecommendation {
+export interface HealthRecommendation {
   title: string
   description: string
   priority: "high" | "medium" | "low"
   action: string
+  consultDoctor?: boolean
 }
 
-export interface FarmInfo {
-  cropType: string
-  soilType: string
-  farmSize: string
-  irrigationMethod: string
-  region?: string
-  season?: string
-  plantingDate?: number
-  expectedHarvest?: number
-  waterSource?: string
-  fertilizerHistory?: string
-  targetYield?: string
-  automationLevel?: "manual" | "semi" | "full"
+export interface PatientProfile {
+  age: number
+  gender: "male" | "female" | "other"
+  medicalHistory: string[]
+  allergies: string[]
+  currentMedications: string[]
+  alcoholConsumption: "none" | "mild" | "moderate" | "heavy"
+  familyHistoryLiver: boolean
+  riskFactors: string[]
   isOnboardingComplete?: boolean
   lastUpdated: number
 }
@@ -56,14 +58,19 @@ export interface ChatMessage {
   timestamp: number
 }
 
-export type PostType = "question" | "success_story" | "farming_tip"
+export type PostType = "question" | "health_tip" | "recovery_story"
 
-export interface CommunityComment {
+export interface CommunityPost {
   id: string
   authorId: string
   authorName: string
+  type: PostType
+  title: string
   content: string
   timestamp: number
+  likes: string[] // Array of user IDs who liked
+  comments?: CommunityComment[]
+  isAnonymous?: boolean
 }
 
 export interface CommunityPost {
@@ -79,20 +86,55 @@ export interface CommunityPost {
   farmInfo?: FarmInfo // Context of the farm that shared the post
 }
 
-export interface MarketPrice {
+export interface HealthcareService {
   id: string
-  cropName: string
-  marketName: string
+  name: string
+  type: "lab_test" | "consultation" | "prescription"
+  provider: string
   currentPrice: number
-  unit: string
+  currency: string
   change: number
   trend: "up" | "down" | "stable"
   lastUpdated: number
 }
 
-export interface PriceTrend {
-  date: string
-  price: number
+export interface Doctor {
+  id: string
+  name: string
+  specialization: string // e.g., "Hepatology", "Gastroenterology"
+  qualifications: string[]
+  experience: number
+  hospital?: string
+  rating: number
+  totalReviews: number
+  availableSlots: string[]
+  consultationFee: number
+  bio?: string
+}
+
+export interface Appointment {
+  id: string
+  patientId: string
+  doctorId: string
+  doctorName: string
+  appointmentDate: number
+  appointmentTime: string
+  status: "scheduled" | "completed" | "cancelled" | "no-show"
+  reasonForVisit: string
+  notes?: string
+  prescriptionId?: string
+}
+
+export interface Consultation {
+  id: string
+  appointmentId: string
+  patientId: string
+  doctorId: string
+  consultationDate: number
+  diagnosis?: string
+  recommendations: string[]
+  prescriptions?: string[]
+  followUpDate?: number
 }
 
 export interface WeatherForecast {
@@ -116,6 +158,7 @@ export interface UserProfile {
   displayName: string
   email: string
   createdAt: string
-  role: "farmer" | "admin"
-  farmInfo?: FarmInfo
+  role: "patient" | "doctor" | "admin"
+  patientProfile?: PatientProfile
+  specialization?: string // For doctors: "hepatology", "gastroenterology", etc.
 }

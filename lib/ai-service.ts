@@ -1,43 +1,42 @@
 import { ApiKeys } from './store/settings-slice'
-import { SensorReading, FarmInfo, ChatMessage } from './types'
+import { HealthReading, PatientProfile, ChatMessage } from './types'
 
-export async function generateAiRecommendation(
-    reading: SensorReading,
+export async function generateLiverDiseaseAssessment(
+    reading: HealthReading,
     apiKeys: ApiKeys,
-    farmInfo?: FarmInfo,
+    patientProfile?: PatientProfile,
     provider: 'Gemini' | 'OpenRouter' | 'Cohere' = 'Cohere'
 ): Promise<string | null> {
     const prompt = `
-    Context: Premium Smart Agriculture System.
-    Role: Expert Agronomist & AI Advisor.
+    Context: AI-Powered Liver Disease Prediction & Assessment System.
+    Role: Medical AI Advisor specializing in Hepatology.
     
-    FARM PROFILE:
-    - Crop: ${farmInfo?.cropType || "General Crops"}
-    - Soil: ${farmInfo?.soilType || "Unknown"}
-    - System: ${farmInfo?.irrigationMethod || "Standard"}
-    - Region: ${farmInfo?.region || "N/A"}
-    - Season: ${farmInfo?.season || "N/A"}
-    - Size: ${farmInfo?.farmSize || "Standard plot"}
-    - Automation: ${farmInfo?.automationLevel || "manual"}
+    PATIENT PROFILE:
+    - Age: ${patientProfile?.age || "Unknown"}
+    - Gender: ${patientProfile?.gender || "Unknown"}
+    - Alcohol Consumption: ${patientProfile?.alcoholConsumption || "Unknown"}
+    - Family History of Liver Disease: ${patientProfile?.familyHistoryLiver ? "Yes" : "No"}
+    - Medical History: ${patientProfile?.medicalHistory?.join(", ") || "None reported"}
+    - Risk Factors: ${patientProfile?.riskFactors?.join(", ") || "None reported"}
 
-    REAL-TIME SENSOR DATA:
-    - Soil Moisture: ${reading.soilMoisture.toFixed(1)}%
-    - Air Temperature: ${reading.temperature.toFixed(1)}°C
-    - Air Humidity: ${reading.humidity.toFixed(1)}%
-    ${reading.weather ? `
-    WEATHER FORECAST:
-    - Outside Temp: ${reading.weather.temp}°C
-    - Condition: ${reading.weather.condition}
-    - Wind: ${reading.weather.windSpeed} km/h
-    ` : ''}
+    LATEST LAB TEST RESULTS:
+    - Bilirubin: ${reading.metrics.bilirubin.toFixed(2)} mg/dL (Normal: <1.2)
+    - ALT (SGPT): ${reading.metrics.alt.toFixed(0)} Units/L (Normal: <40)
+    - AST (SGOT): ${reading.metrics.ast.toFixed(0)} Units/L (Normal: <40)
+    - Albumin: ${reading.metrics.albumin.toFixed(2)} g/dL (Normal: 3.5-5.0)
+    - INR: ${reading.metrics.inr.toFixed(2)} (Normal: 0.8-1.1)
+    - Platelets: ${reading.metrics.platelets.toFixed(0)} 10^9/L (Normal: 150-400)
+    - Triglycerides: ${reading.metrics.triglycerides.toFixed(0)} mg/dL (Normal: <150)
+    - Glucose: ${reading.metrics.glucose.toFixed(0)} mg/dL (Normal: 70-100 fasting)
 
-    Objective: Provide a highly accurate, data-driven irrigation and crop management recommendation.
+    Objective: Provide a comprehensive liver disease risk assessment based on lab values and clinical profile.
     
     Rules:
-    1. Maximum 2-3 high-impact sentences.
-    2. If moisture is below 20%, start with "URGENT IRRIGATION REQUIRED".
-    3. Reference the specific crop type if known.
-    4. Provide specific guidance (e.g., "Irrigate for 20 minutes" or "Delay watering due to humidity").
+    1. Analyze FIB-4 and APRI scores for liver fibrosis risk.
+    2. Maximum 3-4 professional sentences with clinical recommendations.
+    3. If multiple values are abnormal, flag as "REQUIRES DOCTOR CONSULTATION".
+    4. Suggest lifestyle modifications and dietary changes when appropriate.
+    5. Recommend follow-up tests if needed.
     `
 
     let endpoint = ''
@@ -87,38 +86,43 @@ export async function generateAiRecommendation(
 
         return null
     } catch (error) {
-        console.error(`AI Recommendation Error (${provider}):`, error)
+        console.error(`AI Assessment Error (${provider}):`, error)
         return "AI Service temporarily unavailable. Please check your network or API keys."
     }
 }
-export async function generateAiChatResponse(
+export async function generateMedicalChatResponse(
     query: string,
     history: ChatMessage[],
-    reading: SensorReading,
+    reading: HealthReading,
     apiKeys: ApiKeys,
-    farmInfo?: FarmInfo,
+    patientProfile?: PatientProfile,
     provider: 'Gemini' | 'OpenRouter' | 'Cohere' = 'Gemini'
 ): Promise<string | null> {
     const contextPrompt = `
-    As an AI Agricultural Advisor, answer the user's manual query based on the following REAL-TIME context:
+    As a Medical AI Assistant specializing in Liver Health, answer the user's question based on the following context:
     
-    FARM PROFILE:
-    - Crop: ${farmInfo?.cropType || "General Crops"}
-    - Soil: ${farmInfo?.soilType || "Unknown"}
-    - System: ${farmInfo?.irrigationMethod || "Standard"}
-    - Location Info: ${farmInfo?.farmSize ? `${farmInfo.farmSize} acres` : "Standard plot"}
+    PATIENT PROFILE:
+    - Age: ${patientProfile?.age || "Unknown"}
+    - Gender: ${patientProfile?.gender || "Unknown"}
+    - Medical History: ${patientProfile?.medicalHistory?.join(", ") || "None reported"}
+    - Current Medications: ${patientProfile?.currentMedications?.join(", ") || "None reported"}
+    - Allergies: ${patientProfile?.allergies?.join(", ") || "None reported"}
 
-    SENSOR DATA:
-    - Soil Moisture: ${reading.soilMoisture.toFixed(1)}%
-    - Temp: ${reading.temperature.toFixed(1)}°C
-    - Humidity: ${reading.humidity.toFixed(1)}%
-    ${reading.weather ? `WEATHER: ${reading.weather.condition}, ${reading.weather.temp}°C` : ''}
+    RECENT LAB VALUES:
+    - Bilirubin: ${reading.metrics.bilirubin.toFixed(2)} mg/dL
+    - ALT: ${reading.metrics.alt.toFixed(0)} Units/L
+    - AST: ${reading.metrics.ast.toFixed(0)} Units/L
+    - Albumin: ${reading.metrics.albumin.toFixed(2)} g/dL
+    - INR: ${reading.metrics.inr.toFixed(2)}
+    - Platelets: ${reading.metrics.platelets.toFixed(0)} 10^9/L
 
     Rules:
-    1. Be concise, professional, and empathetic.
-    2. Reference the sensor data if relevant to the user's query.
-    3. Use Markdown with clear headers for segments (e.g., ### Irrigation Management, ### Crop Sustainability).
-    4. User Query: "${query}"
+    1. Be professional, empathetic, and evidence-based.
+    2. Reference lab values if relevant to the query.
+    3. Use Markdown formatting for clarity (headers, bullet points).
+    4. ALWAYS suggest consulting with a doctor for medical decisions.
+    5. Disclaimer: This is supplementary guidance, not a diagnosis.
+    6. User Query: "${query}"
     `
 
     const messages = [
@@ -184,7 +188,7 @@ export async function generateAiChatResponse(
 
         return null
     } catch (error) {
-        console.error(`AI Chat Error (${provider}):`, error)
+        console.error(`Medical Chat Error (${provider}):`, error)
         return null
     }
 }

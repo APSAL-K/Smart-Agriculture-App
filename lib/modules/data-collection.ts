@@ -1,44 +1,54 @@
-import type { SensorReading } from "../types"
+import type { HealthReading } from "../types"
 
-export const MOISTURE_LOW_THRESHOLD = 30
-export const MOISTURE_CRITICAL_THRESHOLD = 15
-export const TEMP_HIGH_THRESHOLD = 40
+// Liver disease health metric thresholds (normal ranges)
+export const BILIRUBIN_HIGH_THRESHOLD = 1.2 // mg/dL
+export const ALT_HIGH_THRESHOLD = 40 // Units/L
+export const AST_HIGH_THRESHOLD = 40 // Units/L
+export const ALBUMIN_LOW_THRESHOLD = 3.5 // g/dL
+export const INR_HIGH_THRESHOLD = 1.1 // Ratio
+export const PLATELETS_LOW_THRESHOLD = 150 // 10^9/L
 
-export function generateDemoData(): SensorReading[] {
+export function generateDemoHealthData(): HealthReading[] {
     const now = Date.now()
-    const data: SensorReading[] = []
+    const data: HealthReading[] = []
     for (let i = 23; i >= 0; i--) {
         data.push({
             id: `demo-${i}`,
-            soilMoisture: 25 + Math.random() * 50,
-            temperature: 18 + Math.random() * 15,
-            humidity: 40 + Math.random() * 40,
+            metrics: {
+                bilirubin: 0.5 + Math.random() * 1.5,
+                alt: 20 + Math.random() * 50,
+                ast: 20 + Math.random() * 50,
+                albumin: 3.5 + Math.random() * 1.5,
+                inr: 0.8 + Math.random() * 0.5,
+                platelets: 150 + Math.random() * 250,
+                triglycerides: 100 + Math.random() * 300,
+                glucose: 80 + Math.random() * 80,
+                creatinine: 0.7 + Math.random() * 0.5,
+                alkalinePhosphatase: 44 + Math.random() * 50,
+            },
             timestamp: now - i * 3600000,
-            deviceId: "sensor-01",
-            weather: {
-                temp: 20 + Math.random() * 10,
-                humidity: 50 + Math.random() * 30,
-                condition: Math.random() > 0.5 ? "Sunny" : "Partly Cloudy",
-                windSpeed: 5 + Math.random() * 15,
-            }
+            labName: "Lab Test " + (i + 1),
         })
     }
     return data
 }
 
-export function generateLiveReading(): SensorReading {
+export function generateLiveHealthReading(): HealthReading {
     return {
         id: `live-${Date.now()}`,
-        soilMoisture: 25 + Math.random() * 50,
-        temperature: 18 + Math.random() * 15,
-        humidity: 40 + Math.random() * 40,
+        metrics: {
+            bilirubin: 0.5 + Math.random() * 1.5,
+            alt: 20 + Math.random() * 50,
+            ast: 20 + Math.random() * 50,
+            albumin: 3.5 + Math.random() * 1.5,
+            inr: 0.8 + Math.random() * 0.5,
+            platelets: 150 + Math.random() * 250,
+            triglycerides: 100 + Math.random() * 300,
+            glucose: 80 + Math.random() * 80,
+            creatinine: 0.7 + Math.random() * 0.5,
+            alkalinePhosphatase: 44 + Math.random() * 50,
+        },
         timestamp: Date.now(),
-        deviceId: "sensor-01",
-        weather: {
-            temp: 20 + Math.random() * 10,
-            humidity: 50 + Math.random() * 30,
-            condition: Math.random() > 0.5 ? "Sunny" : "Partly Cloudy",
-            windSpeed: 5 + Math.random() * 15,
-        }
+        labName: "Latest Test",
     }
 }

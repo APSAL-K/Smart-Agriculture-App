@@ -10,14 +10,14 @@ import {
 } from "react"
 import { useRouter } from "next/navigation"
 
-import type { FarmInfo } from "./types"
+import type { PatientProfile } from "./types"
 
 interface User {
   uid: string
   email: string
   displayName?: string
   location?: string
-  farmInfo?: FarmInfo
+  patientProfile?: PatientProfile
 }
 
 interface AuthContextType {
@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: foundUser.email,
         displayName: foundUser.displayName,
         location: foundUser.location || "California, USA",
-        farmInfo: foundUser.farmInfo
+        patientProfile: foundUser.patientProfile
       }
       setUser(userData)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(userData))
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         displayName,
         location: "California, USA", // Default location
         createdAt: new Date().toISOString(),
-        farmInfo: undefined
+        patientProfile: undefined
       }
 
       usersDb.push(newUser)
@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: newUser.email,
         displayName: newUser.displayName,
         location: newUser.location,
-        farmInfo: newUser.farmInfo
+        patientProfile: newUser.patientProfile
       }
       setUser(userData)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(userData))
