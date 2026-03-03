@@ -1,5 +1,3 @@
-import { ref, push, set, onValue, off, update, remove, get } from "firebase/database"
-import { getFirebaseDatabase } from "./firebase"
 import type { CommunityPost, CommunityComment, PostType } from "./types"
 import { store } from "./store/redux-store"
 import { addDemoPost, toggleLikeDemoPost, addCommentDemoPost } from "./store/community-slice"
@@ -61,115 +59,147 @@ const getLocalPosts = () => {
 export const createPost = async (
     post: Omit<CommunityPost, "id" | "likes" | "comments" | "timestamp">
 ): Promise<string | null> => {
-    const database = getFirebaseDatabase()
-    if (!database) {
-        // Demo Mode: Add to Redux storage
-        const newId = `local-${Date.now()}`
+    try {
+        const { getFirebaseDatabaseInstance } = await import("@/lib/firebase")
+        const database = await getFirebaseDatabaseInstance()
+        
+        if (!database) {
+            // Demo Mode: Add to Redux storage
+            const newId = `local-${Date.now()}`
+            const newPost: CommunityPost = {
+                ...post,
+                id: newId,
+                timestamp: Date.now(),
+                likes: [],
+                comments: [],
+            }
+            store.dispatch(addDemoPost(newPost))
+            return newId
+        }
+
+        const { ref, push, set } = await import("firebase/database")
+        const postsRef = ref(database, POSTS_PATH)
+        const newPostRef = push(postsRef)
+
         const newPost: CommunityPost = {
             ...post,
-            id: newId,
+            id: newPostRef.key || "",
             timestamp: Date.now(),
             likes: [],
             comments: [],
         }
-        store.dispatch(addDemoPost(newPost))
-        return newId
+
+        await set(newPostRef, newPost)
+        return newPostRef.key
+    } catch (error) {
+        console.error("[v0] Error creating post:", error)
+        return null
     }
-
-    const postsRef = ref(database, POSTS_PATH)
-    const newPostRef = push(postsRef)
-
-    const newPost: CommunityPost = {
-        ...post,
-        id: newPostRef.key || "",
-        timestamp: Date.now(),
-        likes: [],
-        comments: [],
-    }
-
-    await set(newPostRef, newPost)
-    return newPostRef.key
 }
 
 export const subscribeToPosts = (callback: (posts: CommunityPost[]) => void) => {
-    const database = getFirebaseDatabase()
-    if (!database) {
-        // Demo Mode: Subscribe to Redux store changes
+    // Demo Mode: Subscribe to Redux store changes
+    callback(getLocalPosts())
+    const unsubscribe = store.subscribe(() => {
         callback(getLocalPosts())
-        const unsubscribe = store.subscribe(() => {
-            callback(getLocalPosts())
-        })
-        return unsubscribe
-    }
-
-    const postsRef = ref(database, POSTS_PATH)
-
-    const listener = onValue(postsRef, (snapshot) => {
-        const data = snapshot.val()
-        if (!data) {
-            // If database exists but is empty, merge with demo posts for better UX
-            callback(DEMO_POSTS)
-            return
-        }
-
-        // Convert object to array and ensure each item has its ID
-        const postsList: CommunityPost[] = Object.entries(data).map(([key, val]: [string, any]) => ({
-            ...val,
-            id: key
-        }))
-        // Sort by timestamp descending
-        postsList.sort((a, b) => b.timestamp - a.timestamp)
-        callback(postsList)
     })
 
-    return () => off(postsRef, "value", listener)
+    // Try to load Firebase and subscribe
+    const loadFirebaseSubscription = async () => {
+        try {
+            const { getFirebaseDatabaseInstance } = await import("@/lib/firebase")
+            const database = await getFirebaseDatabaseInstance()
+            
+            if (!database) return // Stay in demo mode
+
+            const { ref, onValue, off } = await import("firebase/database")
+            const postsRef = ref(database, POSTS_PATH)
+
+            const listener = onValue(postsRef, (snapshot) => {
+                const data = snapshot.val()
+                if (!data) {
+                    callback(DEMO_POSTS)
+                    return
+                }
+
+                const postsList: CommunityPost[] = Object.entries(data).map(([key, val]: [string, any]) => ({
+                    ...val,
+                    id: key
+                }))
+                postsList.sort((a, b) => b.timestamp - a.timestamp)
+                callback(postsList)
+            })
+
+            return () => off(postsRef, "value", listener)
+        } catch (error) {
+            console.error("[v0] Error loading Firebase posts:", error)
+        }
+    }
+
+    loadFirebaseSubscription()
+
+    return unsubscribe
 }
 
 export const likePost = async (postId: string, userId: string): Promise<void> => {
-    const database = getFirebaseDatabase()
-    if (!database) {
-        // Demo Mode: Toggle like in Redux
-        store.dispatch(toggleLikeDemoPost({ postId, userId }))
-        return
+    try {
+        const { getFirebaseDatabaseInstance } = await import("@/lib/firebase")
+        const database = await getFirebaseDatabaseInstance()
+        
+        if (!database) {
+            // Demo Mode: Toggle like in Redux
+            store.dispatch(toggleLikeDemoPost({ postId, userId }))
+            return
+        }
+
+        const { ref, set, get } = await import("firebase/database")
+        const postRef = ref(database, `${POSTS_PATH}/${postId}/likes`)
+        const snapshot = await get(postRef)
+        let currentLikes: string[] = snapshot.val() || []
+
+        if (currentLikes.includes(userId)) {
+            currentLikes = currentLikes.filter(id => id !== userId)
+        } else {
+            currentLikes.push(userId)
+        }
+
+        await set(postRef, currentLikes)
+    } catch (error) {
+        console.error("[v0] Error liking post:", error)
     }
-
-    const postRef = ref(database, `${POSTS_PATH}/${postId}/likes`)
-    const snapshot = await get(postRef)
-    let currentLikes: string[] = snapshot.val() || []
-
-    if (currentLikes.includes(userId)) {
-        currentLikes = currentLikes.filter(id => id !== userId)
-    } else {
-        currentLikes.push(userId)
-    }
-
-    await set(postRef, currentLikes)
 }
 
 export const addComment = async (
     postId: string,
     comment: Omit<CommunityComment, "id" | "timestamp">
 ): Promise<void> => {
-    const database = getFirebaseDatabase()
-    if (!database) {
-        // Demo Mode: Add comment in Redux
+    try {
+        const { getFirebaseDatabaseInstance } = await import("@/lib/firebase")
+        const database = await getFirebaseDatabaseInstance()
+        
+        if (!database) {
+            // Demo Mode: Add comment in Redux
+            const newComment: CommunityComment = {
+                ...comment,
+                id: `local-comment-${Date.now()}`,
+                timestamp: Date.now(),
+            }
+            store.dispatch(addCommentDemoPost({ postId, comment: newComment }))
+            return
+        }
+
+        const { ref, push, set } = await import("firebase/database")
+        const commentsRef = ref(database, `${POSTS_PATH}/${postId}/comments`)
+        const newCommentRef = push(commentsRef)
+
         const newComment: CommunityComment = {
             ...comment,
-            id: `local-comment-${Date.now()}`,
+            id: newCommentRef.key || "",
             timestamp: Date.now(),
         }
-        store.dispatch(addCommentDemoPost({ postId, comment: newComment }))
-        return
+
+        await set(newCommentRef, newComment)
+    } catch (error) {
+        console.error("[v0] Error adding comment:", error)
     }
-
-    const commentsRef = ref(database, `${POSTS_PATH}/${postId}/comments`)
-    const newCommentRef = push(commentsRef)
-
-    const newComment: CommunityComment = {
-        ...comment,
-        id: newCommentRef.key || "",
-        timestamp: Date.now(),
-    }
-
-    await set(newCommentRef, newComment)
 }

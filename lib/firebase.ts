@@ -1,8 +1,9 @@
 'use client'
 
-import { initializeApp, getApps, type FirebaseApp } from "firebase/app"
-import { getAuth, type Auth } from "firebase/auth"
-import { getDatabase, type Database } from "firebase/database"
+// Dynamic imports that only run on client
+let _firebaseApp: any = null
+let _firebaseAuth: any = null
+let _firebaseDatabase: any = null
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "",
@@ -14,61 +15,52 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
 }
 
-let _app: FirebaseApp | null | undefined
-let _auth: Auth | null | undefined
-let _database: Database | null | undefined
-
-function initializeFirebaseApp(): FirebaseApp | null {
-  if (_app !== undefined) return _app
-  
+async function dynamicInitializeFirebase() {
   try {
-    if (!firebaseConfig.apiKey) {
-      _app = null
-      return null
-    }
-    
+    if (typeof window === "undefined") return null
+    if (!firebaseConfig.apiKey) return null
+
+    const { initializeApp, getApps } = await import("firebase/app")
     const apps = getApps()
-    _app = apps.length === 0 ? initializeApp(firebaseConfig) : apps[0]
-    return _app
+    return apps.length === 0 ? initializeApp(firebaseConfig) : apps[0]
   } catch (error) {
-    console.error("[v0] Firebase init error:", error)
-    _app = null
+    console.error("[v0] Firebase app init error:", error)
     return null
   }
 }
 
-function getFirebaseAuth(): Auth | null {
-  if (_auth !== undefined) return _auth
-  
-  try {
-    const app = initializeFirebaseApp()
-    _auth = app ? getAuth(app) : null
-    return _auth
-  } catch (error) {
-    console.error("[v0] Firebase Auth error:", error)
-    _auth = null
-    return null
+async function getFirebaseAppInstance() {
+  if (_firebaseApp === null && typeof window !== "undefined") {
+    _firebaseApp = await dynamicInitializeFirebase()
   }
+  return _firebaseApp
 }
 
-function getFirebaseDatabase(): Database | null {
-  if (_database !== undefined) return _database
-  
-  try {
-    const app = initializeFirebaseApp()
-    _database = app ? getDatabase(app) : null
-    return _database
-  } catch (error) {
-    console.error("[v0] Firebase Database error:", error)
-    _database = null
-    return null
+async function getFirebaseAuthInstance() {
+  if (typeof window === "undefined") return null
+  if (!_firebaseAuth) {
+    const { getAuth } = await import("firebase/auth")
+    const app = await getFirebaseAppInstance()
+    _firebaseAuth = app ? getAuth(app) : null
   }
+  return _firebaseAuth
 }
 
-// Lazy getters to prevent initialization until accessed
-export const app: FirebaseApp | null = null
-export const auth: Auth | null = null
-export const database: Database | null = null
+async function getFirebaseDatabaseInstance() {
+  if (typeof window === "undefined") return null
+  if (!_firebaseDatabase) {
+    const { getDatabase } = await import("firebase/database")
+    const app = await getFirebaseAppInstance()
+    _firebaseDatabase = app ? getDatabase(app) : null
+  }
+  return _firebaseDatabase
+}
 
-// Export lazy initialization functions
-export { initializeFirebaseApp, getFirebaseAuth, getFirebaseDatabase }
+// Exports for backward compatibility
+export const app = null
+export const auth = null
+export const database = null
+
+// Export async initializers
+export { getFirebaseAppInstance, getFirebaseAuthInstance, getFirebaseDatabaseInstance }
+

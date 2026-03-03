@@ -1,15 +1,15 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { ref, onValue, push, query, orderByChild, limitToLast } from "firebase/database"
-import { database } from "@/lib/firebase"
-import { setSensorReadings, setAlerts, setIsDemo } from "@/lib/store"
+import { useDispatch } from "react-redux"
+import { setSensorReadings, setAlerts, setIsDemo } from "@/lib/store/sensor-slice"
 import type { HealthReading, Alert, PatientProfile } from "@/lib/types"
 import { generateDemoHealthData, generateLiveHealthReading } from "./modules/data-collection"
 import { generateAlerts } from "./modules/alert-system"
 import { toast } from "sonner"
 
 export function useSensorData(userId: string | undefined, patientProfile?: PatientProfile) {
+  const dispatch = useDispatch()
   const [readings, setReadings] = useState<HealthReading[]>([])
   const [alerts, _setAlerts] = useState<Alert[]>([])
   const [loading, setLoading] = useState(true)
@@ -36,55 +36,101 @@ export function useSensorData(userId: string | undefined, patientProfile?: Patie
   }, [seenAlertIds])
 
   useEffect(() => {
-    if (!userId || !database) {
+    if (!userId) {
       const demoData = generateDemoHealthData()
       const demoAlerts = processAlerts(demoData)
       setReadings(demoData)
       _setAlerts(demoAlerts)
       _setIsDemo(true)
-
-      setSensorReadings(demoData)
-      setAlerts(demoAlerts)
-      setIsDemo(true)
-
+      dispatch(setSensorReadings(demoData))
+      dispatch(setAlerts(demoAlerts))
+      dispatch(setIsDemo(true))
       setLoading(false)
       return
     }
 
-    const readingsRef = query(
-      ref(database, `healthData/${userId}`),
-      orderByChild("timestamp"),
-      limitToLast(24)
-    )
+    // Load Firebase dynamically only on client
+    const loadFirebaseAndSubscribe = async () => {
+      try {
+        const { ref, onValue, query, orderByChild, limitToLast } = await import("firebase/database")
+        const { getFirebaseDatabaseInstance } = await import("@/lib/firebase")
+        const database = await getFirebaseDatabaseInstance()
 
-    const unsubscribe = onValue(readingsRef, (snapshot) => {
-      const data: HealthReading[] = []
-      snapshot.forEach((child) => {
-        data.push({ id: child.key!, ...child.val() })
-      })
-      data.sort((a, b) => a.timestamp - b.timestamp)
-      const newAlerts = processAlerts(data)
+        if (!database) {
+          // Demo mode if Firebase not available
+          const demoData = generateDemoHealthData()
+          const demoAlerts = processAlerts(demoData)
+          setReadings(demoData)
+          _setAlerts(demoAlerts)
+          _setIsDemo(true)
+          dispatch(setSensorReadings(demoData))
+          dispatch(setAlerts(demoAlerts))
+          dispatch(setIsDemo(true))
+          setLoading(false)
+          return
+        }
 
-      setReadings(data)
-      _setAlerts(newAlerts)
+        const readingsRef = query(
+          ref(database, `healthData/${userId}`),
+          orderByChild("timestamp"),
+          limitToLast(24)
+        )
 
-      setSensorReadings(data)
-      setAlerts(newAlerts)
+        const unsubscribe = onValue(readingsRef, (snapshot) => {
+          const data: HealthReading[] = []
+          snapshot.forEach((child) => {
+            data.push({ id: child.key!, ...child.val() })
+          })
+          data.sort((a, b) => a.timestamp - b.timestamp)
+          const newAlerts = processAlerts(data)
 
-      setLoading(false)
+          setReadings(data)
+          _setAlerts(newAlerts)
+          dispatch(setSensorReadings(data))
+          dispatch(setAlerts(newAlerts))
+          setLoading(false)
+        })
+
+        return unsubscribe
+      } catch (error) {
+        console.error("[v0] Error loading Firebase sensor data:", error)
+        const demoData = generateDemoHealthData()
+        const demoAlerts = processAlerts(demoData)
+        setReadings(demoData)
+        _setAlerts(demoAlerts)
+        _setIsDemo(true)
+        dispatch(setSensorReadings(demoData))
+        dispatch(setAlerts(demoAlerts))
+        dispatch(setIsDemo(true))
+        setLoading(false)
+      }
+    }
+
+    let unsubscribe: (() => void) | undefined
+    loadFirebaseAndSubscribe().then((unsub) => {
+      unsubscribe = unsub
     })
 
-    return () => unsubscribe()
-  }, [userId, processAlerts])
+    return () => unsubscribe?.()
+  }, [userId, processAlerts, dispatch])
 
   const addReading = useCallback(
     async (reading: Omit<HealthReading, "id" | "timestamp">) => {
-      if (!userId || !database) return
-      const readingsRef = ref(database, `healthData/${userId}`)
-      await push(readingsRef, {
-        ...reading,
-        timestamp: Date.now(),
-      })
+      if (!userId) return
+      try {
+        const { ref, push } = await import("firebase/database")
+        const { getFirebaseDatabaseInstance } = await import("@/lib/firebase")
+        const database = await getFirebaseDatabaseInstance()
+        
+        if (!database) return
+        const readingsRef = ref(database, `healthData/${userId}`)
+        await push(readingsRef, {
+          ...reading,
+          timestamp: Date.now(),
+        })
+      } catch (error) {
+        console.error("[v0] Error adding reading:", error)
+      }
     },
     [userId]
   )
