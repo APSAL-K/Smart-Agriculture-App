@@ -153,6 +153,24 @@ export default function AppointmentPaymentPage() {
         })
       )
 
+      // Update localStorage with payment status
+      const allAppointments = JSON.parse(
+        localStorage.getItem("liver_disease_app_appointments") || "[]"
+      )
+      const updatedAppointments = allAppointments.map((apt: any) =>
+        apt.id === appointment.id
+          ? {
+              ...apt,
+              paymentStatus: "completed",
+              status: "confirmed",
+            }
+          : apt
+      )
+      localStorage.setItem(
+        "liver_disease_app_appointments",
+        JSON.stringify(updatedAppointments)
+      )
+
       toast.success("Payment successful!")
       setTimeout(() => {
         router.push("/dashboard/appointments")
@@ -198,18 +216,18 @@ export default function AppointmentPaymentPage() {
         <Link href="/dashboard/appointments">
           <Button variant="outline" size="sm" className="mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Appointments
+            Back
           </Button>
         </Link>
-        <h1 className="text-3xl font-bold tracking-tight">Complete Payment</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Complete Payment</h1>
+        <p className="text-sm md:text-base text-muted-foreground mt-2">
           Secure payment for your doctor consultation
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* Main Payment Form */}
-        <Card className="md:col-span-2">
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CreditCard className="h-5 w-5 text-primary" />
@@ -222,22 +240,21 @@ export default function AppointmentPaymentPage() {
           <CardContent className="space-y-6">
             {/* Order Summary */}
             <Alert className="border-blue-200 bg-blue-50/50">
-              <AlertCircle className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-blue-800">
+              <AlertCircle className="h-4 w-4 text-blue-600 flex-shrink-0" />
+              <AlertDescription className="text-blue-800 text-xs md:text-sm">
                 <p className="font-semibold">
                   Doctor: {appointment.doctorName}
                 </p>
-                <p className="text-sm">
-                  Appointment: {new Date(appointment.date).toLocaleDateString()} at{" "}
-                  {appointment.time}
+                <p className="text-xs md:text-sm">
+                  {new Date(appointment.date).toLocaleDateString()} at {appointment.time}
                 </p>
               </AlertDescription>
             </Alert>
 
             {/* Card Details */}
-            <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
+            <div className="space-y-4 p-3 md:p-4 bg-muted/30 rounded-lg border">
               <div>
-                <Label htmlFor="cardNumber" className="text-sm font-semibold">
+                <Label htmlFor="cardNumber" className="text-xs md:text-sm font-semibold">
                   Card Number
                 </Label>
                 <Input
@@ -246,15 +263,15 @@ export default function AppointmentPaymentPage() {
                   onChange={(e) => setCardNumber(e.target.value)}
                   placeholder="4242 4242 4242 4242"
                   maxLength={19}
-                  className="mt-2 bg-background"
+                  className="mt-2 bg-background text-sm"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                  Use 4242 4242 4242 4242 for testing
+                  Test: 4242 4242 4242 4242
                 </p>
               </div>
 
               <div>
-                <Label htmlFor="expiryDate" className="text-sm font-semibold">
+                <Label htmlFor="expiryDate" className="text-xs md:text-sm font-semibold">
                   Expiry Date
                 </Label>
                 <Input
@@ -262,13 +279,13 @@ export default function AppointmentPaymentPage() {
                   value={expiryDate}
                   onChange={(e) => setExpiryDate(e.target.value)}
                   placeholder="MM/YY"
-                  className="mt-2 bg-background"
+                  className="mt-2 bg-background text-sm"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-2 md:gap-4">
                 <div>
-                  <Label htmlFor="cvc" className="text-sm font-semibold">
+                  <Label htmlFor="cvc" className="text-xs md:text-sm font-semibold">
                     CVC
                   </Label>
                   <Input
@@ -277,11 +294,11 @@ export default function AppointmentPaymentPage() {
                     onChange={(e) => setCvc(e.target.value)}
                     placeholder="123"
                     maxLength={3}
-                    className="mt-2 bg-background"
+                    className="mt-2 bg-background text-sm"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="zipCode" className="text-sm font-semibold">
+                  <Label htmlFor="zipCode" className="text-xs md:text-sm font-semibold">
                     Zip Code
                   </Label>
                   <Input
@@ -289,7 +306,7 @@ export default function AppointmentPaymentPage() {
                     value={zipCode}
                     onChange={(e) => setZipCode(e.target.value)}
                     placeholder="10001"
-                    className="mt-2 bg-background"
+                    className="mt-2 bg-background text-sm"
                   />
                 </div>
               </div>
@@ -297,10 +314,9 @@ export default function AppointmentPaymentPage() {
 
             {/* Security Info */}
             <Alert className="border-green-200 bg-green-50/50">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-800 text-sm">
-                Your payment is processed securely with Stripe. Your card details
-                are encrypted and never stored on our servers.
+              <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+              <AlertDescription className="text-green-800 text-xs md:text-sm">
+                Payment is secure with Stripe. Card details are encrypted and never stored on our servers.
               </AlertDescription>
             </Alert>
 
@@ -308,7 +324,7 @@ export default function AppointmentPaymentPage() {
             <Button
               onClick={handlePayment}
               disabled={loading}
-              className="w-full h-11"
+              className="w-full h-10 md:h-11 text-sm md:text-base"
               size="lg"
             >
               {loading ? (
@@ -327,45 +343,45 @@ export default function AppointmentPaymentPage() {
         </Card>
 
         {/* Payment Summary */}
-        <Card className="h-fit sticky top-4">
+        <Card className="h-fit lg:sticky lg:top-4">
           <CardHeader>
-            <CardTitle className="text-lg">Order Summary</CardTitle>
+            <CardTitle className="text-base md:text-lg">Order Summary</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 md:space-y-4">
             <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Doctor</span>
-                <span className="font-semibold">
+                <span className="font-semibold text-right">
                   {appointment.doctorName}
                 </span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Specialty</span>
-                <span className="font-semibold">
+                <span className="font-semibold text-right">
                   {appointment.doctorSpecialty}
                 </span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Date</span>
-                <span className="font-semibold">
+                <span className="font-semibold text-right">
                   {new Date(appointment.date).toLocaleDateString()}
                 </span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Time</span>
-                <span className="font-semibold">{appointment.time}</span>
+                <span className="font-semibold text-right">{appointment.time}</span>
               </div>
 
-              <div className="border-t pt-3 flex justify-between">
+              <div className="border-t pt-3 flex justify-between items-center">
                 <span className="font-semibold">Consultation Fee</span>
-                <span className="text-lg font-bold text-primary">
+                <span className="text-base md:text-lg font-bold text-primary">
                   ₹{appointment.consultationFee}
                 </span>
               </div>
 
-              <div className="bg-primary/10 p-3 rounded-lg text-center">
-                <p className="text-xs text-muted-foreground mb-1">Total Amount</p>
-                <p className="text-2xl font-bold text-primary">
+              <div className="bg-primary/10 p-3 md:p-4 rounded-lg text-center space-y-1">
+                <p className="text-xs text-muted-foreground">Total Amount</p>
+                <p className="text-xl md:text-2xl font-bold text-primary">
                   ₹{appointment.consultationFee}
                 </p>
               </div>

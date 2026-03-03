@@ -64,6 +64,10 @@ const appointmentsSlice = createSlice({
       )
       if (appointment) {
         appointment.paymentStatus = action.payload.paymentStatus
+        // Update appointment status to confirmed when payment is completed
+        if (action.payload.paymentStatus === "completed") {
+          appointment.status = "confirmed"
+        }
       }
     },
     clearAppointments: (state) => {
