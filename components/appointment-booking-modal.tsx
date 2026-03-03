@@ -112,8 +112,9 @@ export function AppointmentBookingModal({
       
       // Navigate to payment page after a short delay
       setTimeout(() => {
+        console.log("[v0] Navigating to payment:", appointmentId)
         router.push(`/dashboard/appointments/${appointmentId}/payment`)
-      }, 500)
+      }, 600)
       
       onBookingComplete?.()
     } catch (error) {

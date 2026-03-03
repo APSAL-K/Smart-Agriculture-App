@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams, useParams } from "next/navigation"
 import { useSelector, useDispatch } from "react-redux"
 import { RootState } from "@/lib/store/redux-store"
 import { updatePaymentStatus } from "@/lib/store/appointments-slice"
@@ -27,15 +27,8 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 
-interface PaymentPageProps {
-  params: {
-    appointmentId: string
-  }
-}
-
-export default function AppointmentPaymentPage({
-  params,
-}: PaymentPageProps) {
+export default function AppointmentPaymentPage() {
+  const params = useParams()
   const router = useRouter()
   const searchParams = useSearchParams()
   const dispatch = useDispatch()
@@ -44,18 +37,42 @@ export default function AppointmentPaymentPage({
     (state: RootState) => state.appointments.appointments
   )
 
+  const appointmentId = params?.appointmentId as string
   const [loading, setLoading] = useState(false)
   const [cardNumber, setCardNumber] = useState("4242424242424242")
   const [expiryDate, setExpiryDate] = useState("12/25")
   const [cvc, setCvc] = useState("123")
   const [zipCode, setZipCode] = useState("10001")
   const [mounted, setMounted] = useState(false)
+  const [appointmentFromStorage, setAppointmentFromStorage] = useState<any>(null)
 
-  const appointment = appointments.find((apt) => apt.id === params.appointmentId)
+  let appointment = appointments.find((apt) => apt.id === appointmentId)
+  // Fallback to localStorage if Redux doesn't have it
+  if (!appointment && appointmentFromStorage) {
+    appointment = appointmentFromStorage
+  }
 
   useEffect(() => {
     setMounted(true)
-  }, [])
+    // Try to load from localStorage if Redux is empty
+    if (appointmentId && appointments.length === 0) {
+      const savedAppointments = localStorage.getItem(
+        "liver_disease_app_appointments"
+      )
+      if (savedAppointments) {
+        try {
+          const parsed = JSON.parse(savedAppointments)
+          // Find the appointment
+          const foundAppointment = parsed.find((apt: any) => apt.id === appointmentId)
+          if (foundAppointment) {
+            setAppointmentFromStorage(foundAppointment)
+          }
+        } catch (error) {
+          console.error("[v0] Error loading from localStorage:", error)
+        }
+      }
+    }
+  }, [appointmentId, appointments.length])
 
   useEffect(() => {
     if (!authLoading && !user && mounted) {
@@ -65,11 +82,10 @@ export default function AppointmentPaymentPage({
 
   // Check if appointment exists after hydration
   useEffect(() => {
-    if (mounted && !appointment && appointments.length > 0) {
-      console.log("[v0] Appointment not found:", params.appointmentId)
-      console.log("[v0] Available appointments:", appointments)
+    if (mounted && appointmentId && !appointment) {
+      console.log("[v0] Payment page - Could not find appointment:", appointmentId)
     }
-  }, [appointment, appointments, params.appointmentId, mounted])
+  }, [appointment, appointmentId, mounted])
 
   useEffect(() => {
     // Check if payment was successful
@@ -77,7 +93,7 @@ export default function AppointmentPaymentPage({
     if (paymentStatus === "success") {
       dispatch(
         updatePaymentStatus({
-          appointmentId: params.appointmentId,
+          appointmentId: appointmentId,
           paymentStatus: "completed",
         })
       )
@@ -86,7 +102,7 @@ export default function AppointmentPaymentPage({
         router.push("/dashboard/appointments")
       }, 2000)
     }
-  }, [searchParams, params.appointmentId, dispatch, router])
+  }, [searchParams, appointmentId, dispatch, router])
 
   if (!appointment) {
     return (
