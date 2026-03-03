@@ -1,3 +1,5 @@
+'use client'
+
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app"
 import { getAuth, type Auth } from "firebase/auth"
 import { getDatabase, type Database } from "firebase/database"
@@ -12,22 +14,61 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
 }
 
-function getFirebaseApp(): FirebaseApp | null {
-  if (typeof window === "undefined") return null
-  if (!firebaseConfig.apiKey) return null
-  return getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
+let _app: FirebaseApp | null | undefined
+let _auth: Auth | null | undefined
+let _database: Database | null | undefined
+
+function initializeFirebaseApp(): FirebaseApp | null {
+  if (_app !== undefined) return _app
+  
+  try {
+    if (!firebaseConfig.apiKey) {
+      _app = null
+      return null
+    }
+    
+    const apps = getApps()
+    _app = apps.length === 0 ? initializeApp(firebaseConfig) : apps[0]
+    return _app
+  } catch (error) {
+    console.error("[v0] Firebase init error:", error)
+    _app = null
+    return null
+  }
 }
 
 function getFirebaseAuth(): Auth | null {
-  const app = getFirebaseApp()
-  return app ? getAuth(app) : null
+  if (_auth !== undefined) return _auth
+  
+  try {
+    const app = initializeFirebaseApp()
+    _auth = app ? getAuth(app) : null
+    return _auth
+  } catch (error) {
+    console.error("[v0] Firebase Auth error:", error)
+    _auth = null
+    return null
+  }
 }
 
 function getFirebaseDatabase(): Database | null {
-  const app = getFirebaseApp()
-  return app ? getDatabase(app) : null
+  if (_database !== undefined) return _database
+  
+  try {
+    const app = initializeFirebaseApp()
+    _database = app ? getDatabase(app) : null
+    return _database
+  } catch (error) {
+    console.error("[v0] Firebase Database error:", error)
+    _database = null
+    return null
+  }
 }
 
-export const app = getFirebaseApp()
-export const auth = getFirebaseAuth()
-export const database = getFirebaseDatabase()
+// Lazy getters to prevent initialization until accessed
+export const app: FirebaseApp | null = null
+export const auth: Auth | null = null
+export const database: Database | null = null
+
+// Export lazy initialization functions
+export { initializeFirebaseApp, getFirebaseAuth, getFirebaseDatabase }

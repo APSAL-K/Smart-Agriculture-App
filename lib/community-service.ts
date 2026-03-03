@@ -1,5 +1,5 @@
 import { ref, push, set, onValue, off, update, remove, get } from "firebase/database"
-import { database } from "./firebase"
+import { getFirebaseDatabase } from "./firebase"
 import type { CommunityPost, CommunityComment, PostType } from "./types"
 import { store } from "./store/redux-store"
 import { addDemoPost, toggleLikeDemoPost, addCommentDemoPost } from "./store/community-slice"
@@ -61,6 +61,7 @@ const getLocalPosts = () => {
 export const createPost = async (
     post: Omit<CommunityPost, "id" | "likes" | "comments" | "timestamp">
 ): Promise<string | null> => {
+    const database = getFirebaseDatabase()
     if (!database) {
         // Demo Mode: Add to Redux storage
         const newId = `local-${Date.now()}`
@@ -91,6 +92,7 @@ export const createPost = async (
 }
 
 export const subscribeToPosts = (callback: (posts: CommunityPost[]) => void) => {
+    const database = getFirebaseDatabase()
     if (!database) {
         // Demo Mode: Subscribe to Redux store changes
         callback(getLocalPosts())
@@ -124,6 +126,7 @@ export const subscribeToPosts = (callback: (posts: CommunityPost[]) => void) => 
 }
 
 export const likePost = async (postId: string, userId: string): Promise<void> => {
+    const database = getFirebaseDatabase()
     if (!database) {
         // Demo Mode: Toggle like in Redux
         store.dispatch(toggleLikeDemoPost({ postId, userId }))
@@ -147,6 +150,7 @@ export const addComment = async (
     postId: string,
     comment: Omit<CommunityComment, "id" | "timestamp">
 ): Promise<void> => {
+    const database = getFirebaseDatabase()
     if (!database) {
         // Demo Mode: Add comment in Redux
         const newComment: CommunityComment = {
