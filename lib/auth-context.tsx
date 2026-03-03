@@ -28,22 +28,29 @@ interface AuthContextType {
   updateProfile: (data: Partial<User>) => Promise<void>
   updatePassword: (newPassword: string) => Promise<void>
   signOut: () => Promise<void>
+  handleUnauthorized: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const STORAGE_KEY = "smart_agri_user"
-const USERS_DB_KEY = "smart_agri_users_db"
+const STORAGE_KEY = "smart_health_user"
+const USERS_DB_KEY = "smart_health_users_db"
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     // Load user from localStorage on mount
     const savedUser = localStorage.getItem(STORAGE_KEY)
     if (savedUser) {
-      setUser(JSON.parse(savedUser))
+      try {
+        setUser(JSON.parse(savedUser))
+      } catch (error) {
+        console.error("[v0] Failed to parse saved user:", error)
+        localStorage.removeItem(STORAGE_KEY)
+      }
     }
     setLoading(false)
   }, [])
@@ -57,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         uid: foundUser.uid,
         email: foundUser.email,
         displayName: foundUser.displayName,
-        location: foundUser.location || "California, USA",
+        location: foundUser.location || "India",
         patientProfile: foundUser.patientProfile
       }
       setUser(userData)
@@ -79,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         password,
         displayName,
-        location: "California, USA", // Default location
+        location: "India",
         createdAt: new Date().toISOString(),
         patientProfile: undefined
       }
@@ -129,11 +136,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const handleSignOut = useCallback(async () => {
     setUser(null)
     localStorage.removeItem(STORAGE_KEY)
-  }, [])
+    router.push("/login")
+  }, [router])
+
+  const handleUnauthorized = useCallback(async () => {
+    console.warn("[v0] Unauthorized access detected (401). Auto-logging out...")
+    setUser(null)
+    localStorage.removeItem(STORAGE_KEY)
+    localStorage.setItem("logout_reason", "Session expired")
+    router.push("/login")
+  }, [router])
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, signIn, signUp, updateProfile, updatePassword, signOut: handleSignOut }}
+      value={{ 
+        user, 
+        loading, 
+        signIn, 
+        signUp, 
+        updateProfile, 
+        updatePassword, 
+        signOut: handleSignOut,
+        handleUnauthorized 
+      }}
     >
       {children}
     </AuthContext.Provider>

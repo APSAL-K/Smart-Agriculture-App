@@ -37,23 +37,47 @@ export default function DataCollectionPage() {
     // Patient Profile
     const [age, setAge] = useState("")
     const [gender, setGender] = useState<"male" | "female" | "other">("male")
+    const [weight, setWeight] = useState("")
+    const [height, setHeight] = useState("")
+    const [bmi, setBmi] = useState("")
+    const [bloodType, setBloodType] = useState<"A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-">("O+")
     const [medicalHistory, setMedicalHistory] = useState("")
     const [allergies, setAllergies] = useState("")
     const [currentMedications, setCurrentMedications] = useState("")
+    const [supplementsUsed, setSupplementsUsed] = useState("")
     const [alcoholConsumption, setAlcoholConsumption] = useState<"none" | "mild" | "moderate" | "heavy">("none")
+    const [smokingStatus, setSmokingStatus] = useState<"never" | "former" | "current">("never")
+    const [exerciseFrequency, setExerciseFrequency] = useState<"sedentary" | "light" | "moderate" | "vigorous">("moderate")
+    const [dietType, setDietType] = useState<"vegetarian" | "non-vegetarian" | "vegan" | "mixed">("mixed")
     const [familyHistoryLiver, setFamilyHistoryLiver] = useState(false)
+    const [familyHistoryDiabetes, setFamilyHistoryDiabetes] = useState(false)
+    const [familyHistoryHypertension, setFamilyHistoryHypertension] = useState(false)
     const [riskFactors, setRiskFactors] = useState("")
+    const [occupationalExposure, setOccupationalExposure] = useState("")
+    const [recentTravelHistory, setRecentTravelHistory] = useState("")
 
     useEffect(() => {
         if (user?.patientProfile) {
             setAge(user.patientProfile.age?.toString() || "")
             setGender(user.patientProfile.gender || "male")
+            setWeight(user.patientProfile.weight?.toString() || "")
+            setHeight(user.patientProfile.height?.toString() || "")
+            setBmi(user.patientProfile.bmi?.toString() || "")
+            setBloodType(user.patientProfile.bloodType || "O+")
             setMedicalHistory(user.patientProfile.medicalHistory?.join(", ") || "")
             setAllergies(user.patientProfile.allergies?.join(", ") || "")
             setCurrentMedications(user.patientProfile.currentMedications?.join(", ") || "")
+            setSupplementsUsed(user.patientProfile.supplementsUsed?.join(", ") || "")
             setAlcoholConsumption(user.patientProfile.alcoholConsumption || "none")
+            setSmokingStatus(user.patientProfile.smokingStatus || "never")
+            setExerciseFrequency(user.patientProfile.exerciseFrequency || "moderate")
+            setDietType(user.patientProfile.dietType || "mixed")
             setFamilyHistoryLiver(user.patientProfile.familyHistoryLiver || false)
+            setFamilyHistoryDiabetes(user.patientProfile.familyHistoryDiabetes || false)
+            setFamilyHistoryHypertension(user.patientProfile.familyHistoryHypertension || false)
             setRiskFactors(user.patientProfile.riskFactors?.join(", ") || "")
+            setOccupationalExposure(user.patientProfile.occupationalExposure || "")
+            setRecentTravelHistory(user.patientProfile.recentTravelHistory || "")
         }
     }, [user])
 
@@ -63,12 +87,24 @@ export default function DataCollectionPage() {
                 patientProfile: {
                     age: parseInt(age) || 0,
                     gender,
+                    weight: parseFloat(weight) || 0,
+                    height: parseFloat(height) || 0,
+                    bmi: parseFloat(bmi) || 0,
+                    bloodType,
                     medicalHistory: medicalHistory.split(",").map(x => x.trim()).filter(x => x),
                     allergies: allergies.split(",").map(x => x.trim()).filter(x => x),
                     currentMedications: currentMedications.split(",").map(x => x.trim()).filter(x => x),
+                    supplementsUsed: supplementsUsed.split(",").map(x => x.trim()).filter(x => x),
                     alcoholConsumption,
+                    smokingStatus,
+                    exerciseFrequency,
+                    dietType,
                     familyHistoryLiver,
+                    familyHistoryDiabetes,
+                    familyHistoryHypertension,
                     riskFactors: riskFactors.split(",").map(x => x.trim()).filter(x => x),
+                    occupationalExposure,
+                    recentTravelHistory,
                     isOnboardingComplete: true,
                     lastUpdated: Date.now()
                 }
@@ -90,18 +126,41 @@ export default function DataCollectionPage() {
             return
         }
 
+        if (availableAIModules.length === 0) {
+            toast.warning("No AI modules configured. Configure API keys in Settings for disease analysis.")
+            // Still calculate basic risk without AI
+            calculateBasicRisk()
+            return
+        }
+
         setPredictionLoading(true)
         try {
-            // Simulate risk calculation based on profile
+            // Calculate risk based on profile - will be enhanced with AI later
             const ageNum = parseInt(age)
             let risk: "low" | "moderate" | "high" = "low"
+            
+            // BMI calculation and check
+            if (weight && height) {
+                const heightM = parseFloat(height) / 100
+                const calculatedBmi = parseFloat(weight) / (heightM * heightM)
+                setBmi(calculatedBmi.toFixed(1))
+                
+                if (calculatedBmi > 30) risk = "moderate"
+                if (calculatedBmi > 35) risk = "high"
+            }
             
             if (alcoholConsumption !== "none") risk = "moderate"
             if (alcoholConsumption === "heavy") risk = "high"
             if (familyHistoryLiver) risk = "high"
+            if (familyHistoryDiabetes) risk = "moderate"
+            if (familyHistoryHypertension) risk = "moderate"
             if (medicalHistory.toLowerCase().includes("hepatitis")) risk = "high"
             if (medicalHistory.toLowerCase().includes("diabetes")) risk = "moderate"
+            if (medicalHistory.toLowerCase().includes("cirrhosis")) risk = "high"
             if (ageNum > 50) risk = "moderate"
+            if (ageNum > 60) risk = "high"
+            if (smokingStatus === "current") risk = "moderate"
+            if (exerciseFrequency === "sedentary") risk = "moderate"
             
             setDiseaseRisk(risk)
             
@@ -118,6 +177,19 @@ export default function DataCollectionPage() {
         } finally {
             setPredictionLoading(false)
         }
+    }
+
+    const calculateBasicRisk = () => {
+        const ageNum = parseInt(age)
+        let risk: "low" | "moderate" | "high" = "low"
+        
+        if (alcoholConsumption !== "none") risk = "moderate"
+        if (alcoholConsumption === "heavy") risk = "high"
+        if (familyHistoryLiver) risk = "high"
+        if (medicalHistory.toLowerCase().includes("hepatitis")) risk = "high"
+        if (ageNum > 50) risk = "moderate"
+        
+        setDiseaseRisk(risk)
     }
 
     // Available AI modules based on API keys
@@ -164,7 +236,7 @@ export default function DataCollectionPage() {
                     <CardContent className="space-y-4 pt-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="age" className="text-xs font-bold uppercase text-muted-foreground">Age</Label>
+                                <Label htmlFor="age" className="text-xs font-bold uppercase text-muted-foreground">Age (years)</Label>
                                 <Input id="age" type="number" value={age} onChange={(e) => setAge(e.target.value)} disabled={!isEditing} placeholder="Enter age" className="bg-background" />
                             </div>
                             <div className="space-y-2">
@@ -177,6 +249,42 @@ export default function DataCollectionPage() {
                                         <SelectItem value="male">Male</SelectItem>
                                         <SelectItem value="female">Female</SelectItem>
                                         <SelectItem value="other">Other</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="weight" className="text-xs font-bold uppercase text-muted-foreground">Weight (kg)</Label>
+                                <Input id="weight" type="number" value={weight} onChange={(e) => setWeight(e.target.value)} disabled={!isEditing} placeholder="Enter weight" className="bg-background" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="height" className="text-xs font-bold uppercase text-muted-foreground">Height (cm)</Label>
+                                <Input id="height" type="number" value={height} onChange={(e) => setHeight(e.target.value)} disabled={!isEditing} placeholder="Enter height" className="bg-background" />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="bmi" className="text-xs font-bold uppercase text-muted-foreground">BMI (auto-calculated)</Label>
+                                <Input id="bmi" type="text" value={bmi} disabled className="bg-muted text-muted-foreground" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="bloodType" className="text-xs font-bold uppercase text-muted-foreground">Blood Type</Label>
+                                <Select value={bloodType} onValueChange={(v: any) => setBloodType(v)} disabled={!isEditing}>
+                                    <SelectTrigger id="bloodType" className="bg-background">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="O+">O+</SelectItem>
+                                        <SelectItem value="O-">O-</SelectItem>
+                                        <SelectItem value="A+">A+</SelectItem>
+                                        <SelectItem value="A-">A-</SelectItem>
+                                        <SelectItem value="B+">B+</SelectItem>
+                                        <SelectItem value="B-">B-</SelectItem>
+                                        <SelectItem value="AB+">AB+</SelectItem>
+                                        <SelectItem value="AB-">AB-</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -236,6 +344,102 @@ export default function DataCollectionPage() {
                         <div className="space-y-2">
                             <Label htmlFor="allergies" className="text-xs font-bold uppercase text-muted-foreground">Allergies (comma-separated)</Label>
                             <Input id="allergies" value={allergies} onChange={(e) => setAllergies(e.target.value)} disabled={!isEditing} placeholder="e.g., Penicillin, Shellfish..." className="bg-background" />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Lifestyle & Habits */}
+                <Card className="border-amber-200 bg-amber-50/30 shadow-md rounded-2xl md:col-span-2">
+                    <CardHeader className="pb-3 border-b border-amber-200">
+                        <div className="flex items-center gap-2">
+                            <Activity className="h-5 w-5 text-amber-600" />
+                            <CardTitle className="text-lg text-amber-900">Lifestyle & Habits</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="grid gap-6 md:grid-cols-3 pt-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="smokingStatus" className="text-xs font-bold uppercase text-muted-foreground">Smoking Status</Label>
+                            <Select value={smokingStatus} onValueChange={(v: any) => setSmokingStatus(v)} disabled={!isEditing}>
+                                <SelectTrigger id="smokingStatus" className="bg-background">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="never">Never Smoked</SelectItem>
+                                    <SelectItem value="former">Former Smoker</SelectItem>
+                                    <SelectItem value="current">Current Smoker</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="exerciseFrequency" className="text-xs font-bold uppercase text-muted-foreground">Exercise Frequency</Label>
+                            <Select value={exerciseFrequency} onValueChange={(v: any) => setExerciseFrequency(v)} disabled={!isEditing}>
+                                <SelectTrigger id="exerciseFrequency" className="bg-background">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="sedentary">Sedentary (Little or no exercise)</SelectItem>
+                                    <SelectItem value="light">Light (1-3 days/week)</SelectItem>
+                                    <SelectItem value="moderate">Moderate (3-5 days/week)</SelectItem>
+                                    <SelectItem value="vigorous">Vigorous (6-7 days/week)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="dietType" className="text-xs font-bold uppercase text-muted-foreground">Diet Type</Label>
+                            <Select value={dietType} onValueChange={(v: any) => setDietType(v)} disabled={!isEditing}>
+                                <SelectTrigger id="dietType" className="bg-background">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="vegetarian">Vegetarian</SelectItem>
+                                    <SelectItem value="non-vegetarian">Non-Vegetarian</SelectItem>
+                                    <SelectItem value="vegan">Vegan</SelectItem>
+                                    <SelectItem value="mixed">Mixed</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="supplementsUsed" className="text-xs font-bold uppercase text-muted-foreground">Supplements Used (comma-separated)</Label>
+                            <Input id="supplementsUsed" value={supplementsUsed} onChange={(e) => setSupplementsUsed(e.target.value)} disabled={!isEditing} placeholder="e.g., Vitamin D, Multivitamin..." className="bg-background" />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="occupationalExposure" className="text-xs font-bold uppercase text-muted-foreground">Occupational Exposure</Label>
+                            <Input id="occupationalExposure" value={occupationalExposure} onChange={(e) => setOccupationalExposure(e.target.value)} disabled={!isEditing} placeholder="e.g., Chemical exposure, dust..." className="bg-background" />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="recentTravelHistory" className="text-xs font-bold uppercase text-muted-foreground">Recent Travel (Last 6 months)</Label>
+                            <Input id="recentTravelHistory" value={recentTravelHistory} onChange={(e) => setRecentTravelHistory(e.target.value)} disabled={!isEditing} placeholder="e.g., Countries, regions..." className="bg-background" />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Family History */}
+                <Card className="border-blue-200 bg-blue-50/30 shadow-md rounded-2xl md:col-span-2">
+                    <CardHeader className="pb-3 border-b border-blue-200">
+                        <div className="flex items-center gap-2">
+                            <Heart className="h-5 w-5 text-blue-600" />
+                            <CardTitle className="text-lg text-blue-900">Family Medical History</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4 pt-4">
+                        <div className="grid grid-cols-1 gap-3">
+                            <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors" onClick={() => setFamilyHistoryLiver(!familyHistoryLiver)}>
+                                <input type="checkbox" checked={familyHistoryLiver} disabled={!isEditing} className="w-4 h-4 rounded" />
+                                <span className="text-sm font-medium">Family history of Liver Disease</span>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors" onClick={() => setFamilyHistoryDiabetes(!familyHistoryDiabetes)}>
+                                <input type="checkbox" checked={familyHistoryDiabetes} disabled={!isEditing} className="w-4 h-4 rounded" />
+                                <span className="text-sm font-medium">Family history of Diabetes</span>
+                            </label>
+                            <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-blue-50 transition-colors" onClick={() => setFamilyHistoryHypertension(!familyHistoryHypertension)}>
+                                <input type="checkbox" checked={familyHistoryHypertension} disabled={!isEditing} className="w-4 h-4 rounded" />
+                                <span className="text-sm font-medium">Family history of Hypertension</span>
+                            </label>
                         </div>
                     </CardContent>
                 </Card>

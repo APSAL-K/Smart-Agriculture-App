@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { LogOut, User, Settings, UserCircle, Database, Lightbulb, Users, TrendingUp, Heart, Calendar, FileText } from "lucide-react"
+import { LogOut, Settings, Calendar, FileText, Heart } from "lucide-react"
 import { toast } from "sonner"
 import { useTranslation } from "@/lib/use-translation"
 
@@ -104,12 +104,17 @@ export function DashboardNav() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <div className="flex items-center gap-2 p-2">
+                <div className="flex items-center gap-3 p-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-primary/10 text-xs font-medium text-primary">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
                   <div className="flex flex-col">
-                    <p className="text-sm font-medium">
-                      {user.displayName || "Farmer"}
+                    <p className="text-sm font-semibold text-foreground">
+                      {user.displayName || "Patient"}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground truncate">
                       {user.email}
                     </p>
                   </div>
@@ -117,44 +122,20 @@ export function DashboardNav() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/data-collection" className="flex items-center w-full cursor-pointer">
-                    <Database className="mr-2 h-4 w-4" />
-                    {t('dataCollection')}
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/recommendations" className="flex items-center w-full cursor-pointer">
-                    <Lightbulb className="mr-2 h-4 w-4" />
-                    {t('recommendations')}
+                    <FileText className="mr-2 h-4 w-4" />
+                    Health Profile
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/appointments" className="flex items-center w-full cursor-pointer">
                     <Calendar className="mr-2 h-4 w-4" />
-                    Book Doctor
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/data-collection" className="flex items-center w-full cursor-pointer">
-                    <FileText className="mr-2 h-4 w-4" />
-                    Update Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/profile" className="flex items-center w-full cursor-pointer">
-                    <UserCircle className="mr-2 h-4 w-4" />
-                    My Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard/community" className="flex items-center w-full cursor-pointer">
-                    <Users className="mr-2 h-4 w-4" />
-                    Community
+                    Appointments
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/settings" className="flex items-center w-full cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
-                    Settings
+                    Settings & API Keys
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -163,7 +144,7 @@ export function DashboardNav() {
                   className="text-destructive focus:text-destructive cursor-pointer"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
-                  {t('signOut')}
+                  Sign Out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
