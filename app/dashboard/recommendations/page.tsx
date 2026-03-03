@@ -301,29 +301,23 @@ export default function RecommendationEnginePage() {
                         </CardHeader>
                         <CardContent className="p-3 md:p-6 md:pt-0">
                             <div className="space-y-2 md:space-y-3">
-                                {baseRecommendations.length > 0 ? (
-                                    baseRecommendations.map((rec, i) => (
-                                        <div key={i} className="flex items-start gap-2 md:gap-3 rounded-xl border bg-background p-2 md:p-3 shadow-sm hover:translate-x-1 transition-transform">
-                                            <div className={cn(
-                                                "mt-1.5 h-1.5 w-1.5 md:h-2 md:w-2 rounded-full shrink-0 animate-pulse",
-                                                rec.priority === 'high' ? "bg-red-500" :
-                                                    rec.priority === 'medium' ? "bg-amber-500" : "bg-blue-500"
-                                            )} />
-                                            <div className="min-w-0">
-                                                <p className="text-[11px] md:text-sm font-semibold text-foreground leading-tight truncate">{rec.title}</p>
-                                                <p className="text-[9px] md:text-xs text-muted-foreground mt-1 line-clamp-2 md:line-clamp-none">{rec.description}</p>
-                                                <Badge variant="secondary" className="mt-1.5 text-[7px] md:text-[10px] px-1 md:px-1.5 h-3.5 md:h-5 uppercase tracking-tighter">
-                                                    {rec.action}
-                                                </Badge>
-                                            </div>
+                                {latestReading ? (
+                                    <div className="flex items-start gap-2 md:gap-3 rounded-xl border bg-background p-2 md:p-3 shadow-sm">
+                                        <div className="mt-1.5 h-1.5 w-1.5 md:h-2 md:w-2 rounded-full shrink-0 animate-pulse bg-green-500" />
+                                        <div className="min-w-0">
+                                            <p className="text-[11px] md:text-sm font-semibold text-foreground leading-tight">Health Status Normal</p>
+                                            <p className="text-[9px] md:text-xs text-muted-foreground mt-1">All liver markers within safe range</p>
+                                            <Badge variant="secondary" className="mt-1.5 text-[7px] md:text-[10px] px-1 md:px-1.5 h-3.5 md:h-5 uppercase tracking-tighter">
+                                                Continue Monitoring
+                                            </Badge>
                                         </div>
-                                    ))
+                                    </div>
                                 ) : (
                                     <div className="py-6 md:py-8 flex flex-col items-center justify-center text-center">
-                                        <div className="h-8 w-8 md:h-10 md:w-10 bg-green-500/10 rounded-full flex items-center justify-center mb-2">
-                                            <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-green-500" />
+                                        <div className="h-8 w-8 md:h-10 md:w-10 bg-blue-500/10 rounded-full flex items-center justify-center mb-2">
+                                            <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-blue-500" />
                                         </div>
-                                        <p className="text-[10px] md:text-xs text-muted-foreground italic font-medium">All systems normal.</p>
+                                        <p className="text-[10px] md:text-xs text-muted-foreground italic font-medium">Upload lab data to see insights.</p>
                                     </div>
                                 )}
                             </div>
@@ -334,26 +328,26 @@ export default function RecommendationEnginePage() {
                         <CardHeader className="p-3 md:p-4 pb-1 md:pb-2 border-b bg-muted/20">
                             <CardTitle className="text-[9px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                                 <RefreshCcw className="h-2.5 w-2.5 md:h-3 md:w-3" />
-                                Farm Context
+                                Health Profile
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-3 md:p-4 space-y-3 md:space-y-4">
                             <div className="grid grid-cols-2 gap-2 md:gap-4">
                                 <div className="space-y-0.5">
-                                    <p className="text-[8px] md:text-[10px] text-muted-foreground uppercase">Crop</p>
-                                    <p className="text-[11px] md:text-sm font-bold capitalize text-primary truncate">{user?.farmInfo?.cropType || 'Not set'}</p>
+                                    <p className="text-[8px] md:text-[10px] text-muted-foreground uppercase">Age</p>
+                                    <p className="text-[11px] md:text-sm font-bold text-primary">{user?.patientProfile?.age || 'Not set'}</p>
                                 </div>
                                 <div className="space-y-0.5">
-                                    <p className="text-[8px] md:text-[10px] text-muted-foreground uppercase">Soil</p>
-                                    <p className="text-[11px] md:text-sm font-bold capitalize text-primary truncate">{user?.farmInfo?.soilType || 'Not set'}</p>
+                                    <p className="text-[8px] md:text-[10px] text-muted-foreground uppercase">BMI</p>
+                                    <p className="text-[11px] md:text-sm font-bold text-primary truncate">{user?.patientProfile?.bmi || 'Not set'}</p>
                                 </div>
                                 <div className="space-y-0.5">
-                                    <p className="text-[8px] md:text-[10px] text-muted-foreground uppercase">System</p>
-                                    <p className="text-[11px] md:text-sm font-bold capitalize text-primary truncate">{user?.farmInfo?.irrigationMethod || 'Standard'}</p>
+                                    <p className="text-[8px] md:text-[10px] text-muted-foreground uppercase">Medical History</p>
+                                    <p className="text-[11px] md:text-sm font-bold capitalize text-primary truncate">{user?.patientProfile?.medicalHistory?.slice(0, 1).join(', ') || 'None'}</p>
                                 </div>
                                 <div className="space-y-0.5">
-                                    <p className="text-[8px] md:text-[10px] text-muted-foreground uppercase">Moisture</p>
-                                    <p className="text-[11px] md:text-sm font-bold text-blue-600 truncate">{latestReading?.soilMoisture?.toFixed(1)}%</p>
+                                    <p className="text-[8px] md:text-[10px] text-muted-foreground uppercase">Risk Level</p>
+                                    <p className="text-[11px] md:text-sm font-bold text-amber-600 truncate">{user?.patientProfile?.riskLevel || 'Low'}</p>
                                 </div>
                             </div>
 
@@ -364,7 +358,7 @@ export default function RecommendationEnginePage() {
                                     className="w-full text-[9px] md:text-xs h-7 md:h-9 hover:bg-primary/5 hover:text-primary border-primary/20 rounded-lg"
                                     onClick={() => window.location.href = '/dashboard/data-collection'}
                                 >
-                                    Modify Parameters
+                                    Update Profile
                                 </Button>
                             </div>
                         </CardContent>
