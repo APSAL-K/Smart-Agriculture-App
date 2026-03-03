@@ -1,29 +1,20 @@
 "use client"
 
 import useSWR, { mutate } from "swr"
-import type { SensorReading, Alert } from "@/lib/types"
+import type { HealthReading, Alert } from "@/lib/types"
 
 // ─── SWR keys ───────────────────────────────────────────
-const SENSOR_KEY = "agrosense:sensor-readings"
-const ALERTS_KEY = "agrosense:alerts"
-const DEMO_KEY = "agrosense:is-demo"
+const SENSOR_KEY = "livercare:health-readings"
+const ALERTS_KEY = "livercare:alerts"
+const DEMO_KEY = "livercare:is-demo"
 
 // ─── Mutators (cache writes) ────────────────────────────
-export function setSensorReadings(readings: SensorReading[]) {
+export function setSensorReadings(readings: HealthReading[]) {
   mutate(SENSOR_KEY, readings, { revalidate: false })
 }
 
-export function setAlerts(alerts: Alert[]) {
-  mutate(ALERTS_KEY, alerts, { revalidate: false })
-}
-
-export function setIsDemo(val: boolean) {
-  mutate(DEMO_KEY, val, { revalidate: false })
-}
-
-// ─── Hooks (cache reads) ────────────────────────────────
 export function useSensorReadings() {
-  const { data } = useSWR<SensorReading[]>(SENSOR_KEY, null, {
+  const { data } = useSWR<HealthReading[]>(SENSOR_KEY, null, {
     fallbackData: [],
     revalidateOnFocus: false,
     revalidateOnReconnect: false,

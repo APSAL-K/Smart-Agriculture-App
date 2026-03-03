@@ -28,8 +28,7 @@ import {
     Trash2,
     ChevronDown,
 } from "lucide-react"
-import { generateAiChatResponse } from "@/lib/ai-service"
-import { getRecommendations as getBaseRecommendations } from "@/lib/recommendations"
+import { generateMedicalChatResponse } from "@/lib/ai-service"
 import { cn } from "@/lib/utils"
 import { ChatMessage } from "@/lib/types"
 import ReactMarkdown from "react-markdown"
@@ -56,7 +55,6 @@ export default function RecommendationEnginePage() {
     const scrollRef = useRef<HTMLDivElement>(null)
 
     const latestReading = readings.length > 0 ? readings[readings.length - 1] : null
-    const baseRecommendations = getBaseRecommendations(latestReading)
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -80,12 +78,12 @@ export default function RecommendationEnginePage() {
         setIsTyping(true)
 
         try {
-            const response = await generateAiChatResponse(
+            const response = await generateMedicalChatResponse(
                 inputValue,
                 messages,
                 latestReading,
                 apiKeys,
-                user?.farmInfo,
+                user?.patientProfile,
                 provider
             )
 
@@ -115,7 +113,7 @@ export default function RecommendationEnginePage() {
         setMessages([])
     }
 
-    if (loading) return <div className="p-8 text-center text-muted-foreground italic">Analyzing sensor data...</div>
+    if (loading) return <div className="p-8 text-center text-muted-foreground italic">Analyzing health data...</div>
 
     const hasKey = (provider === 'Gemini' && apiKeys.gemini) ||
         (provider === 'OpenRouter' && apiKeys.openRouter) ||
@@ -126,10 +124,10 @@ export default function RecommendationEnginePage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="space-y-1">
                     <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-primary">
-                        {t('recommendationEngine')}
+                        Health Intelligence
                     </h2>
                     <p className="text-sm md:text-base text-muted-foreground">
-                        AI-driven agricultural advisor with real-time sensor context.
+                        AI-powered health advisor with real-time medical data context.
                     </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
@@ -184,9 +182,9 @@ export default function RecommendationEnginePage() {
                                             <div className="absolute -inset-4 bg-primary/5 rounded-full blur-xl animate-pulse" />
                                             <Sparkles className="h-16 w-16 text-primary/30" />
                                         </div>
-                                        <h3 className="text-lg font-semibold text-foreground">Agricultural Intelligence Hub</h3>
+                                        <h3 className="text-lg font-semibold text-foreground">Health Intelligence Hub</h3>
                                         <p className="text-sm text-muted-foreground max-w-[280px] mt-2 leading-relaxed">
-                                            Ask about Irrigation Management, Soil Health, or Weather Impacts.
+                                            Ask about Lab Results, Liver Health, or Treatment Options.
                                         </p>
                                     </div>
                                 )}

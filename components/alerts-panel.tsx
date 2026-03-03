@@ -26,11 +26,11 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2 font-serif text-base sm:text-lg">
-              <CheckCircle2 className="mr-2 h-4 w-4" />
-              {t('analytics')}
+              <AlertTriangle className="mr-2 h-4 w-4" />
+              Health Alerts
             </CardTitle>
             <CardDescription className="text-xs sm:text-sm">
-              Active sensor alerts
+              Active health warnings
             </CardDescription>
           </div>
           {alerts.length > 0 && (

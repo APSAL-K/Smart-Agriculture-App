@@ -16,26 +16,20 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Lightbulb,
-  ArrowRight,
-  Droplets,
-  Thermometer,
-  Wind,
   Sparkles,
 } from "lucide-react"
-import { getRecommendations } from "@/lib/recommendations"
-import type { SensorReading, IrrigationRecommendation, FarmInfo } from "@/lib/types"
+import type { HealthReading, PatientProfile } from "@/lib/types"
 import { useTranslation } from "@/lib/use-translation"
-import { generateAiRecommendation } from "@/lib/ai-service"
-import { cn } from "@/lib/utils"
+import { generateLiverDiseaseAssessment } from "@/lib/ai-service"
 
 interface RecommendationsPanelProps {
-  latestReading: SensorReading | null
-  farmInfo?: FarmInfo
+  latestReading: HealthReading | null
+  patientProfile?: PatientProfile
 }
 
 export function RecommendationsPanel({
   latestReading,
-  farmInfo
+  patientProfile
 }: RecommendationsPanelProps) {
   const { t } = useTranslation()
   const apiKeys = useSelector((state: RootState) => state.settings.apiKeys)
@@ -43,20 +37,18 @@ export function RecommendationsPanel({
   const [loadingAi, setLoadingAi] = useState(false)
   const [hasFetched, setHasFetched] = useState(false)
 
-  const recommendations = getRecommendations(latestReading)
-
   const handleGetAiAdvice = async () => {
     if (!latestReading || loadingAi) return
 
     if (!apiKeys.cohere) {
-      setAiAdvice("Cohere API key missing. Please configure it in Settings to unlock AI insights.")
+      setAiAdvice("Cohere API key missing. Please configure it in Settings to unlock AI health insights.")
       setHasFetched(true)
       return
     }
 
     setLoadingAi(true)
     setHasFetched(true)
-    const advice = await generateAiRecommendation(latestReading, apiKeys, farmInfo, 'Cohere')
+    const advice = await generateLiverDiseaseAssessment(latestReading, apiKeys, patientProfile, 'Cohere')
     setAiAdvice(advice)
     setLoadingAi(false)
   }
@@ -71,10 +63,10 @@ export function RecommendationsPanel({
             </div>
             <div>
               <CardTitle className="font-black text-xl tracking-tight text-foreground uppercase">
-                {t('recommendations')}
+                Health Insights
               </CardTitle>
               <CardDescription className="text-sm font-medium text-muted-foreground">
-                Intelligent operational guidance powered by Cohere AI
+                AI-powered analysis of your liver health indicators
               </CardDescription>
             </div>
           </div>
@@ -88,7 +80,7 @@ export function RecommendationsPanel({
             disabled={loadingAi || !latestReading}
           >
             <Sparkles className="h-3.5 w-3.5" />
-            {loadingAi ? "Consulting AI…" : hasFetched ? "Refresh AI Advice" : "Get AI Advice"}
+            {loadingAi ? "Analyzing Health Data…" : hasFetched ? "Refresh Analysis" : "Get AI Analysis"}
           </Button>
         </div>
       </CardHeader>
@@ -101,7 +93,7 @@ export function RecommendationsPanel({
               <Sparkles className="h-8 w-8 animate-spin text-primary opacity-20" />
               <Sparkles className="h-6 w-6 absolute inset-1 animate-pulse text-primary" />
             </div>
-            <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Consulting Digital Agronomist...</p>
+            <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Analyzing Your Health Data...</p>
           </div>
         )}
 
@@ -111,7 +103,7 @@ export function RecommendationsPanel({
             <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/10 blur-3xl" />
             <h3 className="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-primary">
               <Sparkles className="h-4 w-4 animate-pulse" />
-              AI Intelligent Insight
+              AI Health Assessment
             </h3>
             <div className="relative z-10 prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-strong:text-foreground prose-headings:text-foreground prose-headings:font-bold prose-headings:mb-2 prose-headings:mt-3 first:prose-headings:mt-0 text-foreground/90">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -126,98 +118,17 @@ export function RecommendationsPanel({
           <div className="mb-8 flex flex-col items-center justify-center gap-3 py-6 rounded-3xl bg-muted/10 border border-dashed border-primary/20">
             <Sparkles className="h-8 w-8 text-primary/30" />
             <p className="text-sm text-muted-foreground text-center max-w-xs">
-              Click <span className="font-semibold text-primary">Get AI Advice</span> above to get a personalised AI recommendation based on your live sensor data.
+              Click <span className="font-semibold text-primary">Get AI Analysis</span> to get personalized health insights based on your lab data.
             </p>
           </div>
         )}
 
-        {recommendations.length === 0 ? (
+        {!latestReading ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
-            No sensor data available for recommendations.
+            No health data available. Upload your lab results to get recommendations.
           </p>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {recommendations.map((rec, i) => (
-              <RecommendationCard key={i} recommendation={rec} />
-            ))}
-          </div>
-        )}
+        ) : null}
       </CardContent>
     </Card>
-  )
-}
-
-function RecommendationCard({
-  recommendation,
-}: {
-  recommendation: IrrigationRecommendation
-}) {
-  const priorityConfig = {
-    high: {
-      color: "border-destructive/20",
-      bg: "bg-destructive/5",
-      label: "High Priority",
-    },
-    medium: {
-      color: "border-accent/30",
-      bg: "bg-accent/10",
-      label: "Medium Priority",
-    },
-    low: {
-      color: "border-primary/20",
-      bg: "bg-primary/5",
-      label: "Low Priority",
-    },
-  }
-
-  const config = priorityConfig[recommendation.priority]
-
-  const icon =
-    recommendation.title.toLowerCase().includes("moisture") ||
-      recommendation.title.toLowerCase().includes("irrigation") ||
-      recommendation.title.toLowerCase().includes("watering") ||
-      recommendation.title.toLowerCase().includes("reduce") ? (
-      <Droplets className="h-4 w-4" />
-    ) : recommendation.title.toLowerCase().includes("temperature") ||
-      recommendation.title.toLowerCase().includes("heat") ||
-      recommendation.title.toLowerCase().includes("frost") ? (
-      <Thermometer className="h-4 w-4" />
-    ) : (
-      <Wind className="h-4 w-4" />
-    )
-
-  return (
-    <div
-      className={cn(
-        "flex flex-col gap-3 rounded-lg border p-3 transition-shadow hover:shadow-md sm:p-4",
-        config.color,
-        config.bg
-      )}
-    >
-      <div className="flex items-start justify-between">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-background">
-          {icon}
-        </div>
-        <Badge variant="outline" className="text-[10px]">
-          {config.label}
-        </Badge>
-      </div>
-      <div>
-        <h3 className="text-sm font-semibold text-foreground">
-          {recommendation.title}
-        </h3>
-        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-          {recommendation.description}
-        </p>
-      </div>
-      <div className="rounded-md bg-background p-2.5 sm:p-3">
-        <div className="flex items-start gap-2">
-          <ArrowRight className="mt-0.5 h-3 w-3 shrink-0 text-primary" />
-          <p className="text-xs leading-relaxed text-foreground">
-            {recommendation.action}
-          </p>
-        </div>
-      </div>
-    </div>
   )
 }
